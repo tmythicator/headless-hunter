@@ -1,0 +1,68 @@
+* Headless Hunter
+
+An automated, specialized job search agent designed to efficiently identify high-relevance job opportunities using a multi-phase AI workflow.
+
+** Features
+
+- *Intelligent Scouting*: Uses LLM-driven planning to analyze resumes and user wishes to formulate targeted search queries.
+- *The Harvester*: A Puppeteer-based deep scraper that:
+  - Bypasses aggregators to find original job listings.
+  - Extracts full job descriptions (including "Show More" content) from Glassdoor, LinkedIn, and others.
+  - Handles both list pages and direct job links.
+- *Cynical Analysis*: A specialized "Headless Hunter" persona that cuts through the noise of standard job descriptions to strictly filter for genuine technical alignment.
+- *Nix-Powered Environment*: Reproducible development environment using Nix and Bun.
+
+** Prerequisites
+
+- [[https://nixos.org/download.html][Nix]] with Flakes enabled.
+- [[https://tavily.com/][Tavily API Key]]
+- [[https://ollama.com/][Ollama]] (running locally)
+
+** Setup
+
+1.  Clone the repository.
+2.  Create a ~.env~ file:
+    #+BEGIN_SRC bash
+    TAVILY_API_KEY=tvly-xxxxxxxx
+    # Optional: Switch to Cloud LLM (Gemini)
+    # LLM_PROVIDER=google
+    # GOOGLE_API_KEY=AIzaSy...
+    #+END_SRC
+3.  Create a ~resume.md~ file in the root directory with your CV/Resume content.
+    - *Tip*: This is highly recommended for personalized results.
+4.  Ensure Ollama is running (~systemctl start ollama~ or ~ollama serve~).
+
+** Usage
+
+Enter the development shell:
+
+#+BEGIN_SRC bash
+nix develop
+#+END_SRC
+
+Run the agent:
+
+#+BEGIN_SRC bash
+bun run src/index.tsx
+#+END_SRC
+
+** Testing
+
+Run the built-in test bench to verify the Harvester module:
+
+#+BEGIN_SRC bash
+bun run src/test_bench.ts
+#+END_SRC
+
+** Architecture
+
+Built on a **RAG-enhanced Agentic Workflow** using **LangGraph**.
+
+- *Agentic State Machine* (~src/state.ts~): Manages conversation history and long-term memory using a cyclic graph architecture.
+- *Reasoning Engine* (~src/nodes.ts~): Uses Chain-of-Thought (CoT) to plan, execute, and refine search strategies.
+- *Hybrid RAG Pipeline* (~src/tools.ts~): Combines broad API search (Tavily) with deep, headless browser scraping (Puppeteer) to feed high-fidelity data into the context window.
+- *Model Abstraction* (~src/model_factory.ts~): Supports both Local Inference (Edge AI via Ollama) and Cloud LLMs (Gemini) through a unified interface.
+
+** License
+
+MIT
