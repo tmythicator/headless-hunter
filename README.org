@@ -56,7 +56,7 @@ bun run src/test_bench.ts
 
 ** Architecture
 
-Built on a **RAG-enhanced Agentic Workflow** using **LangGraph**.
+Built on a *RAG-enhanced Agentic Workflow* using *LangGraph*.
 
 - *Agentic State Machine* (~src/state.ts~): Manages conversation history and long-term memory using a cyclic graph architecture.
 - *Reasoning Engine* (~src/nodes.ts~): Uses Chain-of-Thought (CoT) to plan, execute, and refine search strategies.
