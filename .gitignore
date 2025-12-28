@@ -1,8 +1,8 @@
-node_modules
+node_modules/
 .env
-dist
-.direnv
+dist/
+.direnv/
 *.log
-result.md
-*_debug.txt
+*debug.txt
+*result.md
 resume.md

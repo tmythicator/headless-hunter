@@ -7,7 +7,7 @@ export const AgentState = Annotation.Root({
     }),
 
     user_wishlist: Annotation<string>({
-        reducer: (x, y) => y,
+        reducer: (_x, y) => y,
         default: () => "",
     }),
 
@@ -18,7 +18,12 @@ export const AgentState = Annotation.Root({
     }),
 
     resume_content: Annotation<string>({
-        reducer: (x, y) => y,
+        reducer: (_x, y) => y,
         default: () => "",
+    }),
+
+    output_file: Annotation<string>({
+        reducer: (_x, y) => y,
+        default: () => "result.md",
     }),
 });
