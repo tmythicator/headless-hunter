@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { render, Box, Text, Newline, useApp } from 'ink';
 import Spinner from 'ink-spinner';
 import TextInput from 'ink-text-input';
+import Report from './components/Report';
 import { graph } from './graph';
 
 const HeadlessHunterApp = () => {
@@ -29,12 +30,12 @@ const HeadlessHunterApp = () => {
       for await (const step of stream) {
         const nodeName = Object.keys(step)[0];
         const stepData = step[nodeName];
-        
+
         if (nodeName === 'profiler') {
           const role = stepData.user_preferences?.role;
           addLog(`✅ Profiler target: ${role}`);
         }
-        
+
         addLog(`✅ Step finished: ${nodeName}`);
 
         if (nodeName === 'scout') {
@@ -60,7 +61,7 @@ const HeadlessHunterApp = () => {
     >
       <Box marginBottom={1} justifyContent="center">
         <Text bold color="green">
-          [ 💀 HEADLESS HUNTER ]
+                                   [ 💀 HEADLESS HUNTER ]
         </Text>
       </Box>
 
@@ -102,7 +103,7 @@ const HeadlessHunterApp = () => {
         <Box flexDirection="column" marginTop={1} padding={1} borderStyle="single" borderColor="green">
           <Text bold color="green">📄 RECRUITMENT REPORT:</Text>
           <Newline />
-          <Text>{finalResult}</Text>
+          <Report>{finalResult}</Report>
           <Newline />
           <Text color="dim">Press Ctrl+C to exit.</Text>
         </Box>

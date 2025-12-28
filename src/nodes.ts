@@ -188,7 +188,7 @@ export async function scoutNode(state: typeof AgentState.State) {
     6. **DEPTH**: For each job, provide a detailed breakdown of the stack mentioned in the snippets vs the user's stack. Mention specific libraries if visible.
     7. **VERIFICATION BADGE**: Check if the Job URL is in the "SUCCESSFULLY SCRAPED URLs" list.
        - If YES: Add "✅ [Verified Live]" to the Verdict.
-       - If NO: Add "⚠️ [Search Snippet Only]" to the Verdict.
+       - If NO: Add "⚠️ [Tavily interpretation only]" to the Verdict.
 
     REPORT FORMAT (Markdown):
     ## [Job Title] @ [Company] ([Country - e.g. Germany])
