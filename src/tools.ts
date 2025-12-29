@@ -1,25 +1,27 @@
 import puppeteer from "puppeteer";
 import { logTrace } from "./logger";
 
+import { TavilySearchResult } from "./types";
+
 export async function searchJobsInDach(query: string, options: {
     max_results?: number,
     search_depth?: "basic" | "advanced",
     include_domains?: string[],
     exclude_domains?: string[]
-} = {}) {
+} = {}): Promise<TavilySearchResult[]> {
     const apiKey = process.env.TAVILY_API_KEY;
     if (!apiKey) {
         await logTrace("TAVILY_ERROR", "Missing API Key", "TAVILY_API_KEY is not set in .env");
-        return "[]";
+        return [];
     }
 
     const payload = {
         api_key: apiKey,
         query: query,
-        search_depth: options.search_depth || "basic",
-        max_results: options.max_results || 10,
-        include_domains: options.include_domains || [],
-        exclude_domains: options.exclude_domains || []
+        search_depth: options.search_depth ?? "basic",
+        max_results: options.max_results ?? 10,
+        include_domains: options.include_domains ?? [],
+        exclude_domains: options.exclude_domains ?? []
     };
 
     try {
@@ -33,8 +35,8 @@ export async function searchJobsInDach(query: string, options: {
             throw new Error(`Tavily API error: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        const results = data.results || [];
+        const data = await response.json() as { results: TavilySearchResult[] };
+        const results = data.results ?? [];
         
         await logTrace("TAVILY_FETCH", JSON.stringify(payload, null, 2), JSON.stringify(results, null, 2));
         return results;
@@ -44,11 +46,11 @@ export async function searchJobsInDach(query: string, options: {
     }
 }
 
-export async function extractUrlContent(urls: string[]) {
+export async function extractUrlContent(urls: string[]): Promise<TavilySearchResult[]> {
     const apiKey = process.env.TAVILY_API_KEY;
     if (!apiKey) {
         await logTrace("TAVILY_ERROR", "Missing API Key", "TAVILY_API_KEY is not set in .env");
-        return "[]";
+        return [];
     }
 
     const payload = {
@@ -68,8 +70,8 @@ export async function extractUrlContent(urls: string[]) {
             throw new Error(`Tavily Extract API error: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        const results = data.results || [];
+        const data = await response.json() as { results: TavilySearchResult[] };
+        const results = data.results ?? [];
         
         await logTrace("TAVILY_EXTRACT", JSON.stringify(payload, null, 2), JSON.stringify(results, null, 2));
         return results;
@@ -207,7 +209,7 @@ export async function scrapeContentLocal(url: string): Promise<string> {
   
     } catch (e) {
       await logTrace("HARVESTER_SCRAPE_ERROR", url, String(e));
-      return `Failed to scrape ${url} locally. Error: ${e}`;
+      return `Failed to scrape ${url} locally. Error: ${String(e)}`;
     } finally {
       await browser.close();
     }

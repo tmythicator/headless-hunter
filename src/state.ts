@@ -1,5 +1,6 @@
-import { Annotation } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
+import { Annotation } from "@langchain/langgraph";
+import { UserPreferences } from "./types";
 
 export const AgentState = Annotation.Root({
     messages: Annotation<BaseMessage[]>({
@@ -11,10 +12,9 @@ export const AgentState = Annotation.Root({
         default: () => "",
     }),
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    user_preferences: Annotation<Record<string, any>>({
-        reducer: (x, y) => ({ ...x, ...y }),
-        default: () => ({}),
+    user_preferences: Annotation<UserPreferences>({
+        reducer: (x, y) => ({ ...x, ...y } as UserPreferences), 
+        default: () => ({ role: "", keywords: [], location: "", min_salary: null } as UserPreferences),
     }),
 
     resume_content: Annotation<string>({

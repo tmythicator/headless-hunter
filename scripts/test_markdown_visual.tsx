@@ -1,4 +1,4 @@
-import { render, Box } from 'ink';
+import { render } from 'ink';
 import Report from '../src/components/Report';
 
 const sample = `

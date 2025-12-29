@@ -8,5 +8,6 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "types": ["bun-types"]
-    }
+    },
+    "include": ["src", "scripts", "tests", "eslint.config.js"]
 }

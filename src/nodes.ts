@@ -2,6 +2,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { getModel, ModelRole } from "./model_factory";
 import { AgentState } from "./state";
 import { searchJobsInDach, extractUrlContent, harvestLinksFromPage, scrapeContentLocal } from "./tools";
+import { UserPreferences, TavilySearchResult } from "./types";
 import { logTrace } from "./logger";
 
 export async function profilerNode(state: typeof AgentState.State) {
@@ -45,13 +46,14 @@ export async function profilerNode(state: typeof AgentState.State) {
 
   const response = await model.invoke([new HumanMessage(prompt)]);
 
-  await logTrace("PROFILER", prompt, response.content.toString());
+  const contentStr = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+  await logTrace("PROFILER", prompt, contentStr);
 
-  const cleanJson = response.content.toString().replace(/```json|```/g, '').trim();
+  const cleanJson = contentStr.replace(/```json|```/g, '').trim();
 
-  let prefs;
+  let prefs: UserPreferences;
   try {
-    prefs = JSON.parse(cleanJson);
+    prefs = JSON.parse(cleanJson) as UserPreferences;
   } catch (_e) {
     await logTrace("PROFILER_ERROR", "JSON Parse Error", cleanJson);
     prefs = { role: state.user_wishlist, keywords: [], location: "", min_salary: null };
@@ -69,7 +71,7 @@ export async function scoutNode(state: typeof AgentState.State) {
   const p = state.user_preferences;
   const resume = state.resume_content;
 
-  const baseQuery = `${p.role} ${p.keywords.slice(0, 3).join(" ")} ${p.location} ${p.country || ""}`;
+  const baseQuery = `${p.role} ${p.keywords.slice(0, 3).join(" ")} ${p.location} ${p.country ?? ""}`;
   const siteConstraints = [
     "site:linkedin.com/jobs/view/",
     "site:glassdoor.com/job-listing/",
@@ -88,20 +90,17 @@ export async function scoutNode(state: typeof AgentState.State) {
     max_results: 25,
     search_depth: "advanced"
   });
-  const searchResultsString = typeof searchResults === 'string' ? searchResults : JSON.stringify(searchResults, null, 2);
+  const searchResultsString = JSON.stringify(searchResults, null, 2);
   await logTrace("SCOUT_SEARCH", query, searchResultsString);
 
   // 3. Collect verified links
   const verifiedLinksMap = new Map<string, string>();
-  if (Array.isArray(searchResults)) {
-    searchResults.forEach(r => {
+  searchResults.forEach((r: TavilySearchResult) => {
       if (r.url) verifiedLinksMap.set(r.url, r.title || "No Title");
-    });
-  }
+  });
 
   // Harvester (Local Puppeteer)
-  const harvestTargets = Array.isArray(searchResults)
-    ? searchResults.filter(r =>
+  const harvestTargets = searchResults.filter((r: TavilySearchResult) =>
       r.url && (
         r.url.includes("glassdoor") ||
           r.url.includes("linkedin.com/jobs/search") ||
@@ -109,8 +108,7 @@ export async function scoutNode(state: typeof AgentState.State) {
           r.url.includes("indeed") ||
           (r.title && r.title.toLowerCase().includes("jobs") && !r.url.includes("/view/") && !r.url.includes("/job/"))
       )
-    ).slice(0, 2)
-    : [];
+    ).slice(0, 2);
 
   let scrapedKnowledge = "";
 
@@ -141,14 +139,15 @@ export async function scoutNode(state: typeof AgentState.State) {
   }
 
   if (scrapedKnowledge.length < 500) {
-    const directLinks = Array.isArray(searchResults)
-      ? searchResults.filter(r => !r.url.includes("glassdoor") && !r.url.includes("search")).slice(0, 2).map(r => r.url)
-      : [];
+    const directLinks = searchResults
+      .filter((r: TavilySearchResult) => !r.url.includes("glassdoor") && !r.url.includes("search"))
+      .slice(0, 2)
+      .map((r: TavilySearchResult) => r.url);
 
     if (directLinks.length > 0) {
       const scrapedDocs = await extractUrlContent(directLinks);
-      scrapedDocs.forEach((d: { url: string, raw_content?: string, content?: string }) => {
-        const txt = d.raw_content || d.content || "";
+      scrapedDocs.forEach((d: TavilySearchResult) => {
+        const txt = d.raw_content ?? d.content ?? "";
         scrapedKnowledge += `\n\n--- TAVILY SOURCE: ${d.url} ---\n${txt}`;
         if (txt.length > 100) successfulScrapes.add(d.url);
       });
@@ -211,7 +210,7 @@ export async function scoutNode(state: typeof AgentState.State) {
   let analysisText = "";
   try {
       const response = await model.invoke([new HumanMessage(analysisPrompt)]);
-      analysisText = response.content.toString();
+      analysisText = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
       await logTrace("SCOUT_ANALYSIS", "Length: " + analysisText.length, analysisText);
   } catch (err) {
       await logTrace("SCOUT_ERROR", "Model Invocation Failed", String(err));

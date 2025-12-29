@@ -15,7 +15,7 @@ const FormattedLine = ({ line }: { line: string }) => {
   }
 
   // List items
-  if (line.trim().match(/^[-*]\s/)) {
+  if (/^[-*]\s/.exec(line.trim())) {
     const plain = line.trim().replace(/^[-*]\s/, '');
     return (
       <Box marginLeft={2}>
@@ -26,17 +26,17 @@ const FormattedLine = ({ line }: { line: string }) => {
   }
 
   // Numbered lists
-  if (line.trim().match(/^\d+\.\s/)) {
+  if (/^\d+\.\s/.exec(line.trim())) {
     return (
       <Box marginLeft={2}>
-        <Text color="yellow">{line.match(/^\d+\.\s/)![0]}</Text>
+        <Text color="yellow">{/^\d+\.\s/.exec(line)![0]}</Text>
         <Text>{parseInline(line.replace(/^\d+\.\s/, ''))}</Text>
       </Box>
     );
   }
 
   // Horizontal Rule
-  if (line.trim().match(/^(-{3,}|\*{3,})$/)) {
+  if (/^(-{3,}|\*{3,})$/.exec(line.trim())) {
     return <Text dimColor>{'─'.repeat(60)}</Text>;
   }
 

@@ -37,7 +37,7 @@ describe("Ollama Integration (Scout Node)", () => {
     expect(result.messages.length).toBeGreaterThan(0);
 
     const aimessage = result.messages[0];
-    const content = aimessage.content.toString();
+    const content = typeof aimessage.content === 'string' ? aimessage.content : JSON.stringify(aimessage.content);
 
     expect(content).toContain("Verdict:");
     expect(content).toMatch(/\[Verified Live\]|\[Search Snippet Only\]/);

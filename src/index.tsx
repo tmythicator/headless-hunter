@@ -5,6 +5,8 @@ import TextInput from 'ink-text-input';
 import Report from './components/Report';
 import { graph } from './graph';
 import { getModelInfo, ModelRole } from './model_factory';
+import { UserPreferences } from './types';
+import { BaseMessage } from "@langchain/core/messages";
 
 const HeadlessHunterApp = () => {
   const { exit: _exit } = useApp();
@@ -17,7 +19,7 @@ const HeadlessHunterApp = () => {
     setLogs((prev: string[]) => [...prev.slice(-10), msg]);
   };
 
-  const DEFAULT_QUERY = "Senior Software Engineer. Karlsruhe. Remote";
+  const DEFAULT_QUERY = "Senior Software React Engineer. Preferred location: München. Remote possible.";
 
   const handleSubmit = async () => {
     const finalQuery = query.trim() || DEFAULT_QUERY;
@@ -29,8 +31,10 @@ const HeadlessHunterApp = () => {
       const stream = await graph.stream({ user_wishlist: finalQuery });
 
       for await (const step of stream) {
-        const nodeName = Object.keys(step)[0];
-        const stepData = step[nodeName];
+        const nodeName = Object.keys(step as Record<string, unknown>)[0];
+        // Type the step strictly to avoid any
+        const stepRecord = step as Record<string, { user_preferences?: UserPreferences; messages?: BaseMessage[] }>;
+        const stepData = stepRecord[nodeName];
 
         if (nodeName === 'profiler') {
           const role = stepData.user_preferences?.role;
@@ -39,9 +43,9 @@ const HeadlessHunterApp = () => {
 
         addLog(`✅ Step finished: ${nodeName}`);
 
-        if (nodeName === 'scout') {
-          const content = step.scout.messages[0].content;
-          setFinalResult(content as string);
+        if (nodeName === 'scout' && stepData?.messages && stepData.messages.length > 0) {
+          const content = stepData.messages[0].content;
+          setFinalResult(typeof content === 'string' ? content : JSON.stringify(content));
         }
       }
 

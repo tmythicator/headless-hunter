@@ -7,7 +7,7 @@
     "scripts": {
         "start": "bun run src/index.tsx",
         "dev": "bun run --watch src/index.tsx",
-        "lint": "eslint src",
+        "lint": "eslint .",
         "test": "bun test",
         "test:render": "bun run scripts/test_markdown_visual.tsx",
         "test:watch": "bun test --watch"
@@ -40,6 +40,8 @@
         "@types/ink": "^2.0.3",
         "@types/react": "^18.3.27",
         "eslint": "^9.39.2",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-react": "^7.37.5",
         "globals": "^16.5.0",
         "typescript-eslint": "^8.50.1"
     }
