@@ -1,29 +1,42 @@
-import { BaseMessage } from "@langchain/core/messages";
-import { Annotation } from "@langchain/langgraph";
-import { UserPreferences } from "./types";
+import { BaseMessage } from '@langchain/core/messages';
+import { Annotation } from '@langchain/langgraph';
+import { ProfilerSummary, ScoutSummary } from './types';
 
 export const AgentState = Annotation.Root({
-    messages: Annotation<BaseMessage[]>({
-        reducer: (x, y) => x.concat(y),
-    }),
+  messages: Annotation<BaseMessage[]>({
+    reducer: (x, y) => x.concat(y),
+  }),
 
-    user_wishlist: Annotation<string>({
-        reducer: (_x, y) => y,
-        default: () => "",
-    }),
+  user_input_prompt: Annotation<string>({
+    reducer: (_x, y) => y,
+    default: () => '',
+  }),
 
-    user_preferences: Annotation<UserPreferences>({
-        reducer: (x, y) => ({ ...x, ...y } as UserPreferences), 
-        default: () => ({ role: "", keywords: [], location: "", min_salary: null } as UserPreferences),
-    }),
+  user_input_resume: Annotation<string>({
+    reducer: (_x, y) => y,
+    default: () => '',
+  }),
 
-    resume_content: Annotation<string>({
-        reducer: (_x, y) => y,
-        default: () => "",
+  profiler_summary: Annotation<ProfilerSummary>({
+    reducer: (x, y) => ({ ...x, ...y }),
+    default: () => ({
+      role: '',
+      keywords: [],
+      location: '',
+      min_salary: null,
+      vibe: '',
     }),
+  }),
 
-    output_file: Annotation<string>({
-        reducer: (_x, y) => y,
-        default: () => "result.md",
-    }),
+  scout_summary: Annotation<ScoutSummary>({
+    reducer: (_x, y) => y,
+    default: () => ({ market_summary: '', jobs: [] }),
+  }),
+
+  config_output_path: Annotation<string>({
+    reducer: (_x, y) => y,
+    default: () => 'result.md',
+  }),
 });
+
+export type AgentStateType = typeof AgentState.State;

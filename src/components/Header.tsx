@@ -1,0 +1,34 @@
+import { Box, Text } from 'ink';
+import { getModelInfo } from '../model_factory';
+import { AgentNode } from '../types';
+
+const Header = () => {
+  const modelInfo = getModelInfo();
+
+  return (
+    <Box marginBottom={1} justifyContent="center" flexDirection="column" alignItems="center">
+      <Text bold color="green">
+        [ 💀 HEADLESS HUNTER ]
+      </Text>
+      <Box marginTop={0}>
+        <Text>
+          <Text color="magenta" bold>
+            [{AgentNode.PROFILER.toUpperCase()}]
+          </Text>{' '}
+          <Text color="white">{modelInfo.profiler.modelName}</Text>{' '}
+          <Text dimColor>({modelInfo.profiler.provider})</Text>
+        </Text>
+        <Text dimColor> | </Text>
+        <Text>
+          <Text color="yellow" bold>
+            [{AgentNode.SCOUT.toUpperCase()}]
+          </Text>{' '}
+          <Text color="white">{modelInfo.scout.modelName}</Text>{' '}
+          <Text dimColor>({modelInfo.scout.provider})</Text>
+        </Text>
+      </Box>
+    </Box>
+  );
+};
+
+export default Header;

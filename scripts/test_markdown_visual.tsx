@@ -21,6 +21,4 @@ This script validates the **rendering capabilities** of the agent.
 *End of test.*
 `;
 
-render(
-  <Report>{sample}</Report>
-);
+render(<Report>{sample}</Report>);

@@ -1,14 +1,14 @@
 [
-    {
-        "name": "Glassdoor List Page (Multiple Jobs)",
-        "url": "https://www.glassdoor.de/Job/karlsruhe-baden-w%C3%BCrttemberg-deutschland-senior-software-engineer-jobs-SRCH_IL.0,39_IC2771206_KO40,64.htm"
-    },
-    {
-        "name": "Glassdoor Individual Listing 1 (Glass Lewis)",
-        "url": "https://www.glassdoor.com/job-listing/senior-ui-software-engineer-glass-lewis-and-co-JV_IC2363570_KO0,27_KE28,46.htm?jl=1009947579765"
-    },
-    {
-        "name": "Glassdoor Individual Listing 2 (Scalable Press)",
-        "url": "https://www.glassdoor.com/job-listing/senior-fullstack-engineer-typescript-client-success-platform-m-f-x-onsite-remote-in-germany-scalable-press-JV_IC2622109_KO0,91_KE92,106.htm?jl=1009885368868"
-    }
+  {
+    "name": "Glassdoor List Page (Multiple Jobs)",
+    "url": "https://www.glassdoor.de/Job/karlsruhe-baden-w%C3%BCrttemberg-deutschland-senior-software-engineer-jobs-SRCH_IL.0,39_IC2771206_KO40,64.htm"
+  },
+  {
+    "name": "Glassdoor Individual Listing 1 (Glass Lewis)",
+    "url": "https://www.glassdoor.com/job-listing/senior-ui-software-engineer-glass-lewis-and-co-JV_IC2363570_KO0,27_KE28,46.htm?jl=1009947579765"
+  },
+  {
+    "name": "Glassdoor Individual Listing 2 (Scalable Press)",
+    "url": "https://www.glassdoor.com/job-listing/senior-fullstack-engineer-typescript-client-success-platform-m-f-x-onsite-remote-in-germany-scalable-press-JV_IC2622109_KO0,91_KE92,106.htm?jl=1009885368868"
+  }
 ]
