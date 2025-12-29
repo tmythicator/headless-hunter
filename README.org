@@ -76,13 +76,24 @@ LLM_PROVIDER_SCOUT=google
 GOOGLE_API_KEY=AIzaSy...
 #+END_SRC
 
+** Development
+
+Linting and formatting:
+#+BEGIN_SRC bash
+bun run lint
+bun run format
+#+END_SRC
+
 ** Testing
 
-Run the built-in test bench to verify the Harvester module:
-
 #+BEGIN_SRC bash
-bun run src/test_bench.ts
+bun test
 #+END_SRC
+
+Specific test modules:
+- *Harvester (Scraping)*: ~bun test tests/integration/glassdoor.test.ts~
+- *Reasoning (Ollama)*: ~bun test tests/integration/ollama.test.ts~
+- *Visuals*: ~bun run test:render~ (Debug terminal markdown rendering)
 
 ** Architecture
 
