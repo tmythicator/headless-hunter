@@ -79,11 +79,9 @@ export default function Report({ children }: { children: string }) {
   const lines = children.split('\n');
 
   return (
-    <Box borderStyle="round" padding={1} borderColor="cyan" flexDirection="column">
+    <Box flexDirection="column" width="100%">
       {lines.map((line, i) => (
-        <Box key={i}>
-          <FormattedLine line={line} />
-        </Box>
+          <FormattedLine key={i} line={line} />
       ))}
     </Box>
   );

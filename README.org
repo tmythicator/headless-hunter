@@ -24,12 +24,28 @@ An automated, specialized job search agent designed to efficiently identify high
 2.  Create a ~.env~ file:
     #+BEGIN_SRC bash
     TAVILY_API_KEY=tvly-xxxxxxxx
-    # Optional: Switch to Cloud LLM (Gemini)
-    # LLM_PROVIDER=google
-    # GOOGLE_API_KEY=AIzaSy...
+
+    # --- Configuration Strategy ---
+    # The agent uses two roles:
+    # 1. PROFILER (The Brain): Analyzes resume/intent.
+    # 2. SCOUT (The Worker): Reads job descriptions.
+
+    # You can mix and match providers (Local/Ollama vs Google):
+
+    # Example 1: Pure Local (Default)
+    # LLM_PROVIDER=local
+    # OLLAMA_MODEL=ministral-3:14b
+
+    # Example 2: Hybrid (Recommended)
+    # Use Local for privacy (Profile) and Cloud for speed/context (Scout)
+    LLM_PROVIDER_PROFILER=local
+    LLM_PROVIDER_SCOUT=google
+
+    GOOGLE_API_KEY=AIzaSy...
+    GOOGLE_MODEL=gemini-2.5-flash-lite
     #+END_SRC
 3.  Create a ~resume.md~ file in the root directory with your CV/Resume content.
-    - *Tip*: This is highly recommended for personalized results.
+    - *Tip*: If skipped, the agent will use ~tests/fixtures/resume_example.md~ as a fallback/demo.
 4.  Ensure Ollama is running (~systemctl start ollama~ or ~ollama serve~).
 
 ** Usage

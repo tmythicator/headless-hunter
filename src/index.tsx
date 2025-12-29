@@ -4,6 +4,7 @@ import Spinner from 'ink-spinner';
 import TextInput from 'ink-text-input';
 import Report from './components/Report';
 import { graph } from './graph';
+import { getModelInfo, ModelRole } from './model_factory';
 
 const HeadlessHunterApp = () => {
   const { exit: _exit } = useApp();
@@ -52,6 +53,8 @@ const HeadlessHunterApp = () => {
     }
   };
 
+  const modelInfo = getModelInfo();
+
   return (
     <Box
       flexDirection="column"
@@ -59,10 +62,19 @@ const HeadlessHunterApp = () => {
       borderStyle="round"
       borderColor={phase === 'done' ? 'green' : phase === 'working' ? 'yellow' : 'cyan'}
     >
-      <Box marginBottom={1} justifyContent="center">
+      <Box marginBottom={1} justifyContent="center" flexDirection="column" alignItems="center">
         <Text bold color="green">
                                    [ 💀 HEADLESS HUNTER ]
         </Text>
+        <Box marginTop={0}>
+           <Text>
+             <Text color="magenta" bold>[{ModelRole.PROFILER}]</Text> <Text color="white">{modelInfo.profiler.modelName}</Text> <Text dimColor>({modelInfo.profiler.provider})</Text>
+           </Text>
+           <Text dimColor> | </Text>
+           <Text>
+             <Text color="yellow" bold>[{ModelRole.SCOUT}]</Text> <Text color="white">{modelInfo.scout.modelName}</Text> <Text dimColor>({modelInfo.scout.provider})</Text>
+           </Text>
+        </Box>
       </Box>
 
       {phase === 'input' && (
