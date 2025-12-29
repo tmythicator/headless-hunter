@@ -12,6 +12,10 @@ An automated, specialized job search agent designed to efficiently identify high
 - *Cynical Analysis*: A specialized "Headless Hunter" persona that cuts through the noise of standard job descriptions to strictly filter for genuine technical alignment.
 - *Nix-Powered Environment*: Reproducible development environment using Nix and Bun.
 
+** Demo
+
+[[./assets/demo.gif]]
+
 ** Prerequisites
 
 - [[https://nixos.org/download.html][Nix]] with Flakes enabled.
