@@ -2,6 +2,9 @@
 
 Stop hunting. Start matching.
 
+[[https://github.com/tmythicator/headless-hunter/actions/workflows/ci.yml/badge.svg]]
+[[https://img.shields.io/badge/Built_with-Nix-5277C3.svg?logo=nixos&logoColor=white]]
+
 *Headless Hunter* is a terminal-first, autonomous agent that cuts through the noise of modern job boards. It doesn't just search; it *scouts, scrapes, and analyzes* with a cynical eye to find only the roles that actually fit your profile.
 
 ** Demo
