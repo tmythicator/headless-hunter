@@ -4,7 +4,15 @@ import { AgentStateType } from '../state';
 import { WorkflowPhase, AgentNode } from '../types';
 import { ensureString } from '../tools';
 
-export const useAgentWorkflow = () => {
+export interface AgentWorkflow {
+  phase: WorkflowPhase;
+  logs: string[];
+  finalResult: string;
+  startWorkflow: (query: string) => Promise<void>;
+  setPhase: (phase: WorkflowPhase) => void;
+}
+
+export const useAgentWorkflow = (): AgentWorkflow => {
   const [phase, setPhase] = useState<WorkflowPhase>(WorkflowPhase.INPUT);
   const [logs, setLogs] = useState<string[]>([]);
   const [finalResult, setFinalResult] = useState<string>('');

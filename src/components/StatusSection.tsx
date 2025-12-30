@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import { WorkflowPhase } from '../types';
+import { APP_AGENT_HUNTING, APP_PROCESSING_STREAM } from '../constants';
 
 interface StatusSectionProps {
   phase: WorkflowPhase;
@@ -13,7 +14,7 @@ const StatusSection: React.FC<StatusSectionProps> = ({ phase, logs }) => {
       {phase === WorkflowPhase.WORKING && (
         <Box flexDirection="column" marginBottom={1}>
           <Text color="yellow">
-            <Spinner type="dots" /> <Text bold>AGENT IS HUNTING...</Text>
+            <Spinner type="dots" /> <Text bold>{APP_AGENT_HUNTING}</Text>
           </Text>
         </Box>
       )}
@@ -21,7 +22,7 @@ const StatusSection: React.FC<StatusSectionProps> = ({ phase, logs }) => {
       {(phase === WorkflowPhase.WORKING || phase === WorkflowPhase.DONE) && (
         <Box flexDirection="column" marginTop={1}>
           <Text bold underline color="gray">
-            Processing Stream:
+            {APP_PROCESSING_STREAM}
           </Text>
           {logs.map((log: string, i: number) => (
             <Text key={i} dimColor={i < logs.length - 1}>
