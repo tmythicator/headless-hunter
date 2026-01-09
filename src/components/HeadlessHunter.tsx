@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box } from 'ink';
+import { DEFAULT_QUERY } from '../constants';
 import ReportSection from './ReportSection';
 import Header from './Header';
 import InputSection from './InputSection';
@@ -8,7 +9,6 @@ import { useAgentWorkflow } from '../hooks/useAgentWorkflow';
 import { WorkflowPhase } from '../types';
 
 export const HeadlessHunter = () => {
-  const DEFAULT_QUERY = 'Senior Software Engineer (React/TS). Location: München. Remote';
 
   const [query, setQuery] = useState('');
   const { phase, logs, finalResult, startWorkflow } = useAgentWorkflow();

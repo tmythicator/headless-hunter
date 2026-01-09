@@ -6,3 +6,4 @@ dist/
 *debug.txt
 *result.md
 resume.md
+*.code-workspace
