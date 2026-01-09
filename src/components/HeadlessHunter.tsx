@@ -9,7 +9,6 @@ import { useAgentWorkflow } from '../hooks/useAgentWorkflow';
 import { WorkflowPhase } from '../types';
 
 export const HeadlessHunter = () => {
-
   const [query, setQuery] = useState('');
   const { phase, logs, finalResult, startWorkflow } = useAgentWorkflow();
 
