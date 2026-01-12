@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
-import { getModelInfo } from '../llm/model_factory';
-import { AgentNode } from '../types';
-import { APP_GREETING } from '../config/constants';
+import { getModelInfo } from '@/llm/model_factory';
+import { AgentNode } from '@/types';
+import { APP_GREETING } from '@/config/constants';
 
 const Header = () => {
   const modelInfo = getModelInfo();

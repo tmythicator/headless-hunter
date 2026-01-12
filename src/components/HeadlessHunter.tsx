@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Box } from 'ink';
-import { DEFAULT_QUERY } from '../config/constants';
+import { DEFAULT_QUERY } from '@/config/constants';
 import ReportSection from './ReportSection';
 import Header from './Header';
 import InputSection from './InputSection';
 import StatusSection from './StatusSection';
 import { ResumeSelection } from './ResumeSelection';
-import { useAgentWorkflow } from '../hooks/useAgentWorkflow';
-import { WorkflowPhase } from '../types';
+import { useAgentWorkflow } from '@/hooks/useAgentWorkflow';
+import { WorkflowPhase } from '@/types';
 
 export const HeadlessHunter = () => {
   const [query, setQuery] = useState('');

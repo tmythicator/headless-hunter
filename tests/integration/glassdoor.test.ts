@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { harvestLinksFromPage, scrapeContentLocal } from '../../src/tools';
+import { harvestLinksFromPage, scrapeContentLocal } from '@/tools';
 import glassdoorTargets from '../fixtures/glassdoor_targets.json';
 
 const TEST_CASES = glassdoorTargets;

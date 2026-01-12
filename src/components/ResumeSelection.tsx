@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
-import { listResumes } from '../tools/resume_loader';
+import { listResumes } from '@/tools/resume_loader';
 
 interface ResumeSelectionProps {
   onSelect: (path: string | null) => void;

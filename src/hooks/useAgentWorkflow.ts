@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { graph } from '../agent/graph';
-import { AgentStateType } from '../agent/state';
-import { WorkflowPhase, AgentNode } from '../types';
-import { ensureString } from '../tools';
+import { graph } from '@/agent/graph';
+import { AgentStateType } from '@/agent/state';
+import { WorkflowPhase, AgentNode } from '@/types';
+import { ensureString } from '@/tools';
 
 export interface AgentWorkflow {
   phase: WorkflowPhase;

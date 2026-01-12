@@ -1,9 +1,9 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
 import { render } from 'ink-testing-library';
-import { HeadlessHunter } from '../../src/components/HeadlessHunter';
-import { WorkflowPhase } from '../../src/types';
+import { HeadlessHunter } from '@/components/HeadlessHunter';
+import { WorkflowPhase } from '@/types';
 import stripAnsi from 'strip-ansi';
-import { AgentWorkflow } from '../../src/hooks/useAgentWorkflow';
+import { AgentWorkflow } from '@/hooks/useAgentWorkflow';
 import {
   APP_AGENT_HUNTING,
   APP_GREETING,
@@ -11,7 +11,7 @@ import {
   APP_QUESTION,
   APP_REPORT_EXIT,
   APP_REPORT_TITLE,
-} from '../../src/config/constants';
+} from '@/config/constants';
 
 const mockStartWorkflow = mock(() => Promise.resolve());
 const mockHook = mock(

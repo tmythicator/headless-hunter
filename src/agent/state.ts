@@ -1,7 +1,7 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { Annotation } from '@langchain/langgraph';
-import { ProfilerSummary, ScoutSummary } from '../types';
-import { getNextHuntFilePath } from '../utils';
+import { ProfilerSummary, ScoutSummary } from '@/types';
+import { getNextHuntFilePath } from '@/utils';
 
 export const AgentState = Annotation.Root({
   messages: Annotation<BaseMessage[]>({

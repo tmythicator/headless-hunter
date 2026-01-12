@@ -1,17 +1,17 @@
 import { HumanMessage } from '@langchain/core/messages';
-import { getModel } from '../llm/model_factory';
+import { getModel } from '@/llm/model_factory';
 import { AgentState } from './state';
 import {
   searchJobsInDach,
   extractUrlContent,
   harvestLinksFromPage,
   scrapeContentLocal,
-} from '../tools';
-import { ProfilerSummary, TavilySearchResult, ScoutSummary, AgentNode } from '../types';
-import { loadResume } from '../tools/resume_loader';
-import { logTrace } from '../utils/logger';
-import { createProfilerPrompt, createScoutPrompt } from '../llm/prompts';
-import { getParsedModelOutput } from '../utils';
+} from '@/tools';
+import { ProfilerSummary, TavilySearchResult, ScoutSummary, AgentNode } from '@/types';
+import { loadResume } from '@/tools/resume_loader';
+import { logTrace } from '@/utils/logger';
+import { createProfilerPrompt, createScoutPrompt } from '@/llm/prompts';
+import { getParsedModelOutput } from '@/utils';
 
 export async function profilerNode(state: typeof AgentState.State) {
   const model = getModel(AgentNode.PROFILER);

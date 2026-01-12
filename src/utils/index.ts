@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { AIMessageChunk } from '@langchain/core/messages';
 import { logTrace } from './logger';
-import { ensureString } from '../tools';
+import { ensureString } from '@/tools';
 
 export async function getParsedModelOutput<T>(
   modelResponse: AIMessageChunk,

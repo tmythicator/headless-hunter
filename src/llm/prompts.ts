@@ -1,4 +1,4 @@
-import { ProfilerSummary } from '../types';
+import { ProfilerSummary } from '@/types';
 
 export const createProfilerPrompt = (userPrompt: string, resumeContent: string): string => `
   You are an expert Technical Recruiter.

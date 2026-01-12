@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
-import { WorkflowPhase } from '../types';
-import { APP_AGENT_HUNTING, APP_PROCESSING_STREAM } from '../config/constants';
+import { WorkflowPhase } from '@/types';
+import { APP_AGENT_HUNTING, APP_PROCESSING_STREAM } from '@/config/constants';
 
 interface StatusSectionProps {
   phase: WorkflowPhase;

@@ -1,7 +1,7 @@
 import { describe, expect, test, spyOn, afterAll } from 'bun:test';
-import { scoutNode } from '../../src/agent/nodes';
-import { ScoutSummary } from '../../src/types';
-import * as tools from '../../src/tools';
+import { scoutNode } from '@/agent/nodes';
+import { ScoutSummary } from '@/types';
+import * as tools from '@/tools';
 import { join } from 'path';
 import mockTavilyResults from '../fixtures/tavily_search_results.json';
 

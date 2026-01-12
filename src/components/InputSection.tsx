@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
-import { APP_QUESTION } from '../config/constants';
+import { APP_QUESTION } from '@/config/constants';
 
 interface InputSectionProps {
   query: string;

@@ -1,5 +1,5 @@
 import { describe, expect, test, spyOn, afterEach } from 'bun:test';
-import { loadResume } from '../../src/tools/resume_loader';
+import { loadResume } from '@/tools/resume_loader';
 import fs from 'fs';
 
 // Mock fs.readFileSync
