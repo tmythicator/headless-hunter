@@ -1,0 +1,50 @@
+import { describe, test, expect } from 'bun:test';
+import { getParsedModelOutput } from '@/utils';
+import { AIMessageChunk } from '@langchain/core/messages';
+
+describe('Utils: getParsedModelOutput', () => {
+  const fallback: any = { error: true };
+
+  test('should extract pure JSON', async () => {
+    const input = '{"key": "value"}';
+    const msg = new AIMessageChunk(input);
+    const result = await getParsedModelOutput(msg, 'TEST', fallback);
+    expect(result).toEqual({ key: 'value' });
+  });
+
+  test('should extract JSON from markdown block', async () => {
+    const input = '```json\n{"key": "value"}\n```';
+    const msg = new AIMessageChunk(input);
+    const result = await getParsedModelOutput(msg, 'TEST', fallback);
+    expect(result).toEqual({ key: 'value' });
+  });
+
+  test('should extract JSON mixed with text', async () => {
+    const input = 'Here is the JSON:\n{"key": "value"}\nHope this helps.';
+    const msg = new AIMessageChunk(input);
+    const result = await getParsedModelOutput(msg, 'TEST', fallback);
+    expect(result).toEqual({ key: 'value' });
+  });
+
+  test('should extract Array JSON mixed with text', async () => {
+    const input = 'Sure, here is the list:\n[\n  {"id": 1}\n]\nEnjoy.';
+    const msg = new AIMessageChunk(input);
+    const result = await getParsedModelOutput(msg, 'TEST', fallback);
+    expect(result).toEqual([{ id: 1 }]);
+  });
+
+  test('should fallback on invalid JSON', async () => {
+    const input = 'This is not JSON.';
+    const msg = new AIMessageChunk(input);
+    const result = await getParsedModelOutput(msg, 'TEST', fallback);
+    expect(result).toEqual(fallback);
+  });
+  
+  test('should extract JSON even with sloppy formatting', async () => {
+      // Missing closing markdown, extra newlines
+    const input = 'Okay:\n\n```json\n{"key": "value"}\n\n';
+    const msg = new AIMessageChunk(input);
+    const result = await getParsedModelOutput(msg, 'TEST', fallback);
+    expect(result).toEqual({ key: 'value' });
+  });
+});

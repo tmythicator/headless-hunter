@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box } from 'ink';
-import { DEFAULT_QUERY } from '@/config/constants';
+import { APP_DEFAULT_QUERY } from '@/config/constants';
 import ReportSection from './ReportSection';
 import Header from './Header';
 import InputSection from './InputSection';
@@ -20,7 +20,7 @@ export const HeadlessHunter = () => {
   };
 
   const handleSubmit = () => {
-    const finalQuery = query.trim() || DEFAULT_QUERY;
+    const finalQuery = query.trim() || APP_DEFAULT_QUERY;
     void startWorkflow(finalQuery, resumePath);
   };
 
@@ -44,7 +44,7 @@ export const HeadlessHunter = () => {
           query={query}
           setQuery={setQuery}
           onSubmit={handleSubmit}
-          defaultQuery={DEFAULT_QUERY}
+          defaultQuery={APP_DEFAULT_QUERY}
         />
       )}
 

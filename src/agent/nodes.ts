@@ -12,6 +12,12 @@ import { loadResume } from '@/tools/resume_loader';
 import { logTrace } from '@/utils/logger';
 import { createProfilerPrompt, createScoutPrompt } from '@/llm/prompts';
 import { getParsedModelOutput } from '@/utils';
+import {
+  LOG_STAGE_SCOUT_SEARCH,
+  LOG_STAGE_SCOUT_ERROR,
+  LOG_MSG_MD_FAILED,
+  LOG_MSG_WRITE_FAILED,
+} from '@/config/constants';
 
 export async function profilerNode(state: typeof AgentState.State) {
   const model = getModel(AgentNode.PROFILER);
@@ -60,7 +66,7 @@ export async function scoutNode(state: typeof AgentState.State) {
     search_depth: 'advanced',
   });
   const searchResultsString = JSON.stringify(searchResults, null, 2);
-  await logTrace('SCOUT_SEARCH', query, searchResultsString);
+  await logTrace(LOG_STAGE_SCOUT_SEARCH, query, searchResultsString);
 
   // 3. Collect verified links
   const verifiedLinksMap = new Map<string, string>();
@@ -73,14 +79,14 @@ export async function scoutNode(state: typeof AgentState.State) {
     .filter(
       (r: TavilySearchResult) =>
         r.url &&
-        (r.url.includes('glassdoor') ||
-          r.url.includes('linkedin.com/jobs/search') ||
-          r.url.includes('stepstone') ||
-          r.url.includes('indeed') ||
-          (r.title &&
-            r.title.toLowerCase().includes('jobs') &&
-            !r.url.includes('/view/') &&
-            !r.url.includes('/job/')))
+          (r.url.includes('glassdoor') ||
+            r.url.includes('linkedin.com/jobs/search') ||
+            r.url.includes('stepstone') ||
+            r.url.includes('indeed') ||
+            (r.title &&
+              r.title.toLowerCase().includes('jobs') &&
+              !r.url.includes('/view/') &&
+              !r.url.includes('/job/')))
     )
     .slice(0, 2);
 
@@ -129,8 +135,8 @@ export async function scoutNode(state: typeof AgentState.State) {
 
   const verifiedLinksLibrary = Array.from(verifiedLinksMap.entries())
     .map(([url, title]) => {
-      return `- ${title}: ${url}`;
-    })
+    return `- ${title}: ${url}`;
+  })
     .join('\n');
 
   const verifiedScrapesList = Array.from(successfulScrapes).join('\n');
@@ -169,7 +175,7 @@ export async function scoutNode(state: typeof AgentState.State) {
       markdownReport += `---\n\n`;
     });
   } catch (err) {
-    await logTrace('SCOUT_ERROR', 'Markdown Generation Failed', String(err));
+    await logTrace(LOG_STAGE_SCOUT_ERROR, LOG_MSG_MD_FAILED, String(err));
     markdownReport = 'Check logs. Model failed to generate report.';
   }
 
@@ -178,7 +184,7 @@ export async function scoutNode(state: typeof AgentState.State) {
     const outFile = state.config_output_path || 'result.md';
     await Bun.write(outFile, markdownReport);
   } catch (e) {
-    await logTrace('SCOUT_ERROR', 'Failed to write result.md', String(e));
+    await logTrace(LOG_STAGE_SCOUT_ERROR, LOG_MSG_WRITE_FAILED, String(e));
   }
 
   return {
