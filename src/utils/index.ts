@@ -3,11 +3,7 @@ import path from 'path';
 import { AIMessageChunk } from '@langchain/core/messages';
 import { logTrace } from './logger';
 import { ensureString } from '@/tools';
-import {
-  LOG_MSG_RAW_CONTENT,
-  LOG_MSG_JSON_ERROR,
-  LOG_MSG_MODEL_FAILED,
-} from '@/config/constants';
+import { LOG_MSG_RAW_CONTENT, LOG_MSG_JSON_ERROR, LOG_MSG_MODEL_FAILED } from '@/config/constants';
 
 export async function getParsedModelOutput<T>(
   modelResponse: AIMessageChunk,
@@ -21,7 +17,7 @@ export async function getParsedModelOutput<T>(
 
     // Compact and robust extraction
     let cleanJson = contentStr;
-    const jsonBlock = contentStr.match(/```json([\s\S]*?)```/);
+    const jsonBlock = /```json([\s\S]*?)```/.exec(contentStr);
 
     if (jsonBlock) {
       cleanJson = jsonBlock[1].trim();
@@ -82,9 +78,7 @@ export function getLogFilePath(resultFilePath: string): string {
 
   // Expected format: hunt-001.md -> hunt-log-001.log
   // If base is 'hunt-001', we want 'hunt-log-001.log'
-  const logBase = base.startsWith('hunt-')
-    ? base.replace('hunt-', 'hunt-log-')
-    : `${base}-log`;
+  const logBase = base.startsWith('hunt-') ? base.replace('hunt-', 'hunt-log-') : `${base}-log`;
 
   return path.join(dir, `${logBase}.log`);
 }

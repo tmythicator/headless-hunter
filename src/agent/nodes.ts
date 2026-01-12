@@ -79,14 +79,14 @@ export async function scoutNode(state: typeof AgentState.State) {
     .filter(
       (r: TavilySearchResult) =>
         r.url &&
-          (r.url.includes('glassdoor') ||
-            r.url.includes('linkedin.com/jobs/search') ||
-            r.url.includes('stepstone') ||
-            r.url.includes('indeed') ||
-            (r.title &&
-              r.title.toLowerCase().includes('jobs') &&
-              !r.url.includes('/view/') &&
-              !r.url.includes('/job/')))
+        (r.url.includes('glassdoor') ||
+          r.url.includes('linkedin.com/jobs/search') ||
+          r.url.includes('stepstone') ||
+          r.url.includes('indeed') ||
+          (r.title &&
+            r.title.toLowerCase().includes('jobs') &&
+            !r.url.includes('/view/') &&
+            !r.url.includes('/job/')))
     )
     .slice(0, 2);
 
@@ -135,8 +135,8 @@ export async function scoutNode(state: typeof AgentState.State) {
 
   const verifiedLinksLibrary = Array.from(verifiedLinksMap.entries())
     .map(([url, title]) => {
-    return `- ${title}: ${url}`;
-  })
+      return `- ${title}: ${url}`;
+    })
     .join('\n');
 
   const verifiedScrapesList = Array.from(successfulScrapes).join('\n');

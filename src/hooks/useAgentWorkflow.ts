@@ -55,10 +55,10 @@ export const useAgentWorkflow = (): AgentWorkflow => {
       addLog(UI_INIT);
 
       try {
-        const stream = await graph.stream({ 
-          user_input_prompt: query, 
+        const stream = await graph.stream({
+          user_input_prompt: query,
           resume_path: resumePath,
-          config_output_path: resultPath
+          config_output_path: resultPath,
         });
 
         for await (const chunk of stream) {
@@ -66,7 +66,7 @@ export const useAgentWorkflow = (): AgentWorkflow => {
 
           if (step[AgentNode.PROFILER]) {
             const role = step[AgentNode.PROFILER]?.profiler_summary?.role;
-            addLog(UI_PROFILER_TARGET(role || 'Unknown'));
+            addLog(UI_PROFILER_TARGET(role ?? 'Unknown'));
             addLog(UI_STEP_FINISHED(AgentNode.PROFILER));
           }
 

@@ -11,7 +11,7 @@ export async function logTrace(stage: string, input: string, output: string, err
   const errStr = error ? `\nERROR:\n${error}\n` : '';
   const entry = `\n--- [${timestamp}] ${stage} ---\nIN:\n${input}\n\nOUT:\n${output}\n${errStr}---------------------------\n`;
   try {
-    const logFile = logContext.getStore() || 'trace.log';
+    const logFile = logContext.getStore() ?? 'trace.log';
     const fileContent = await (async () => {
       try {
         return await Bun.file(logFile).text();
