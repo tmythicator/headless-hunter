@@ -11,7 +11,7 @@ import {
   APP_QUESTION,
   APP_REPORT_EXIT,
   APP_REPORT_TITLE,
-} from '../../src/constants';
+} from '../../src/config/constants';
 
 const mockStartWorkflow = mock(() => Promise.resolve());
 const mockHook = mock(

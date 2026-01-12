@@ -1,7 +1,7 @@
 import { StateGraph } from '@langchain/langgraph';
 import { AgentState } from './state';
 import { profilerNode, scoutNode } from './nodes';
-import { AgentNode } from './types';
+import { AgentNode } from '../types';
 
 export const graph = new StateGraph(AgentState)
   .addNode(AgentNode.PROFILER, profilerNode)

@@ -1,5 +1,5 @@
 import { describe, expect, test, spyOn, afterAll } from 'bun:test';
-import { scoutNode } from '../../src/nodes';
+import { scoutNode } from '../../src/agent/nodes';
 import { ScoutSummary } from '../../src/types';
 import * as tools from '../../src/tools';
 import { join } from 'path';

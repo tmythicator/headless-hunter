@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
-import { logTrace } from './logger';
+import { logTrace } from '../utils/logger';
 
-import { TavilySearchResult } from './types';
+import { TavilySearchResult } from '../types';
 import { MessageContent } from '@langchain/core/messages';
 
 export async function searchJobsInDach(

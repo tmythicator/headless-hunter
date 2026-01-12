@@ -1,6 +1,6 @@
 import { ChatOllama } from '@langchain/ollama';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { ProviderType, AgentNode, ModelConfig } from './types';
+import { ProviderType, AgentNode, ModelConfig } from '../types';
 
 const DEFAULT_OLLAMA_BASE = 'http://localhost:11434';
 

@@ -6,15 +6,17 @@ const DATA_DIR = 'data';
 
 export async function listResumes(): Promise<string[]> {
   try {
-    if (!(await Bun.file(DATA_DIR).exists()) && !(await fs.existsSync(DATA_DIR))) {
-      await fs.mkdirSync(DATA_DIR);
+    if (!(await Bun.file(DATA_DIR).exists()) && !fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR);
       return [];
     }
 
-    const files = await fs.readdirSync(DATA_DIR);
-    return files.filter(f => f.endsWith('.pdf') || f.endsWith('.md')).map(f => `${DATA_DIR}/${f}`);
+    const files = fs.readdirSync(DATA_DIR);
+    return files
+      .filter((f) => f.endsWith('.pdf') || f.endsWith('.md'))
+      .map((f) => `${DATA_DIR}/${f}`);
   } catch (e) {
-    console.error("Failed to list resumes", e);
+    console.error('Failed to list resumes', e);
     return [];
   }
 }
@@ -40,6 +42,6 @@ export async function loadResume(specificPath?: string | null): Promise<string> 
     }
   }
 
-  console.info("⚠️ No resume selected.");
+  console.info('⚠️ No resume selected.');
   return '';
 }

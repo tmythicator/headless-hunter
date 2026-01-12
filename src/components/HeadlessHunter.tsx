@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box } from 'ink';
-import { DEFAULT_QUERY } from '../constants';
+import { DEFAULT_QUERY } from '../config/constants';
 import ReportSection from './ReportSection';
 import Header from './Header';
 import InputSection from './InputSection';

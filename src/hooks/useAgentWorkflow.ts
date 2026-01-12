@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { graph } from '../graph';
-import { AgentStateType } from '../state';
+import { graph } from '../agent/graph';
+import { AgentStateType } from '../agent/state';
 import { WorkflowPhase, AgentNode } from '../types';
 import { ensureString } from '../tools';
 
@@ -25,9 +25,9 @@ export const useAgentWorkflow = (): AgentWorkflow => {
     setPhase(WorkflowPhase.WORKING);
     addLog(`🎯 Target locked: "${query}"`);
     if (resumePath) {
-        addLog(`📄 Using resume: ${resumePath}`);
+      addLog(`📄 Using resume: ${resumePath}`);
     } else {
-        addLog(`⚠️ No resume selected.`);
+      addLog(`⚠️ No resume selected.`);
     }
     addLog('🚀 Initializing Agentic Workflow...');
 

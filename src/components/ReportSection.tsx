@@ -1,6 +1,6 @@
 import { Box, Text, Newline } from 'ink';
 import Report from './Report';
-import { APP_REPORT_EXIT, APP_REPORT_TITLE } from '../constants';
+import { APP_REPORT_EXIT, APP_REPORT_TITLE } from '../config/constants';
 
 interface ReportSectionProps {
   finalResult: string;

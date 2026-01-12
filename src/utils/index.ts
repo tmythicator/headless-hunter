@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { AIMessageChunk } from '@langchain/core/messages';
 import { logTrace } from './logger';
-import { ensureString } from './tools';
+import { ensureString } from '../tools';
 
 export async function getParsedModelOutput<T>(
   modelResponse: AIMessageChunk,
@@ -28,7 +28,7 @@ export async function getParsedModelOutput<T>(
   }
 }
 
-export function getNextHuntFilePath(outputDir: string = 'result'): string {
+export function getNextHuntFilePath(outputDir = 'result'): string {
   try {
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -40,7 +40,7 @@ export function getNextHuntFilePath(outputDir: string = 'result'): string {
     const pattern = /^hunt-(\d+)\.md$/;
 
     for (const file of files) {
-      const match = file.match(pattern);
+      const match = pattern.exec(file);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > maxNum) maxNum = num;
