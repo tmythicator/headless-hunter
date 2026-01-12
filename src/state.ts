@@ -1,6 +1,7 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { Annotation } from '@langchain/langgraph';
 import { ProfilerSummary, ScoutSummary } from './types';
+import { getNextHuntFilePath } from './utils';
 
 export const AgentState = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -15,6 +16,11 @@ export const AgentState = Annotation.Root({
   user_input_resume: Annotation<string>({
     reducer: (_x, y) => y,
     default: () => '',
+  }),
+
+  resume_path: Annotation<string | null>({
+    reducer: (_x, y) => y,
+    default: () => null,
   }),
 
   profiler_summary: Annotation<ProfilerSummary>({
@@ -35,7 +41,7 @@ export const AgentState = Annotation.Root({
 
   config_output_path: Annotation<string>({
     reducer: (_x, y) => y,
-    default: () => 'result.md',
+    default: () => getNextHuntFilePath(),
   }),
 });
 
