@@ -8,12 +8,12 @@ export interface AgentWorkflow {
   phase: WorkflowPhase;
   logs: string[];
   finalResult: string;
-  startWorkflow: (query: string) => Promise<void>;
+  startWorkflow: (query: string, resumePath: string | null) => Promise<void>;
   setPhase: (phase: WorkflowPhase) => void;
 }
 
 export const useAgentWorkflow = (): AgentWorkflow => {
-  const [phase, setPhase] = useState<WorkflowPhase>(WorkflowPhase.INPUT);
+  const [phase, setPhase] = useState<WorkflowPhase>(WorkflowPhase.RESUME_SELECTION);
   const [logs, setLogs] = useState<string[]>([]);
   const [finalResult, setFinalResult] = useState<string>('');
 
@@ -21,13 +21,18 @@ export const useAgentWorkflow = (): AgentWorkflow => {
     setLogs((prev) => [...prev.slice(-10), msg]);
   }, []);
 
-  const startWorkflow = async (query: string) => {
+  const startWorkflow = async (query: string, resumePath: string | null) => {
     setPhase(WorkflowPhase.WORKING);
     addLog(`🎯 Target locked: "${query}"`);
+    if (resumePath) {
+        addLog(`📄 Using resume: ${resumePath}`);
+    } else {
+        addLog(`⚠️ No resume selected.`);
+    }
     addLog('🚀 Initializing Agentic Workflow...');
 
     try {
-      const stream = await graph.stream({ user_input_prompt: query });
+      const stream = await graph.stream({ user_input_prompt: query, resume_path: resumePath });
 
       for await (const chunk of stream) {
         const step = chunk as Partial<Record<AgentNode, Partial<AgentStateType>>>;

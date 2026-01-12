@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { HumanMessage } from '@langchain/core/messages';
 import { getModel } from './model_factory';
 import { AgentState } from './state';
@@ -8,6 +10,7 @@ import {
   scrapeContentLocal,
 } from './tools';
 import { ProfilerSummary, TavilySearchResult, ScoutSummary, AgentNode } from './types';
+import { loadResume } from './resume_loader';
 import { logTrace } from './logger';
 import { createProfilerPrompt, createScoutPrompt } from './prompts';
 import { getParsedModelOutput } from './utils';
@@ -15,18 +18,7 @@ import { getParsedModelOutput } from './utils';
 export async function profilerNode(state: typeof AgentState.State) {
   const model = getModel(AgentNode.PROFILER);
 
-  let resumeContent = '';
-  try {
-    resumeContent = await Bun.file('resume.md').text();
-  } catch (e) {
-    console.warn("'resume.md' not found. Falling back to 'tests/fixtures/resume_example.md'.", e);
-    console.info("To customize, create a 'resume.md' in the root directory.");
-    try {
-      resumeContent = await Bun.file('tests/fixtures/resume_example.md').text();
-    } catch (err) {
-      console.error("Critical: Neither 'resume.md' nor example resume found.", err);
-    }
-  }
+  const resumeContent = await loadResume(state.resume_path);
 
   const profilerPrompt = createProfilerPrompt(state.user_input_prompt, resumeContent);
   const profilerResponse = await model.invoke([new HumanMessage(profilerPrompt)]);

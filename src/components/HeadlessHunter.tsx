@@ -5,16 +5,23 @@ import ReportSection from './ReportSection';
 import Header from './Header';
 import InputSection from './InputSection';
 import StatusSection from './StatusSection';
+import { ResumeSelection } from './ResumeSelection';
 import { useAgentWorkflow } from '../hooks/useAgentWorkflow';
 import { WorkflowPhase } from '../types';
 
 export const HeadlessHunter = () => {
   const [query, setQuery] = useState('');
-  const { phase, logs, finalResult, startWorkflow } = useAgentWorkflow();
+  const [resumePath, setResumePath] = useState<string | null>(null);
+  const { phase, logs, finalResult, startWorkflow, setPhase } = useAgentWorkflow();
+
+  const handleResumeSelect = (path: string | null) => {
+    setResumePath(path);
+    setPhase(WorkflowPhase.INPUT);
+  };
 
   const handleSubmit = () => {
     const finalQuery = query.trim() || DEFAULT_QUERY;
-    void startWorkflow(finalQuery);
+    void startWorkflow(finalQuery, resumePath);
   };
 
   return (
@@ -27,6 +34,10 @@ export const HeadlessHunter = () => {
       }
     >
       <Header />
+
+      {phase === WorkflowPhase.RESUME_SELECTION && (
+        <ResumeSelection onSelect={handleResumeSelect} />
+      )}
 
       {phase === WorkflowPhase.INPUT && (
         <InputSection

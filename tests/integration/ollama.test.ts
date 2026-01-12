@@ -32,6 +32,7 @@ describe('Ollama Integration (Scout Node)', () => {
           vibe: 'Corporate',
         },
         user_input_resume: resumeContent,
+        resume_path: null,
         config_output_path: outputFile,
         scout_summary: { market_summary: '', jobs: [] },
       };
