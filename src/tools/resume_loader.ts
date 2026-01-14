@@ -23,7 +23,6 @@ export async function listResumes(): Promise<string[]> {
 
 export async function loadResume(specificPath?: string | null): Promise<string> {
   if (specificPath) {
-    console.info(`📄 Loading selected resume: '${specificPath}'`);
     try {
       if (specificPath.endsWith('.pdf')) {
         const dataBuffer = fs.readFileSync(specificPath);
