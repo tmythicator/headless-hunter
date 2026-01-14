@@ -19,10 +19,6 @@ describe('LinkedIn Harvester (Live)', () => {
           expect(links[0]).toHaveProperty('url');
           expect(links[0]).toHaveProperty('title');
 
-          const jobLinks = links.filter(
-            (l) => l.url.includes('/jobs/view') || l.url.includes('currentJobId')
-          );
-
           const firstLink = links[0].url;
           console.log(`Attempting to scrape content from: ${firstLink}`);
           const content = await scrapeContentLocal(firstLink);
