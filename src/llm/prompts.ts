@@ -64,6 +64,10 @@ export const createScoutPrompt = (
     7. **VERIFICATION BADGE**: Check if the Job URL is in the "SUCCESSFULLY SCRAPED URLs" list.
     - If YES: Add "✅ [Verified Live]" to the Verdict.
     - If NO: Add "⚠️ [Tavily interpretation only]" to the Verdict.
+    8. **BOT PROTECTION**: If the scraped content for a job contains "[[ANTIBOT_PROTECTION_TRIGGERED]]", YOU MUST:
+    - Add "🛡️ [Bot Protected 😔]" to badges.
+    - Set verdict to 'Interesting Gamble' (since we can't verify details).
+    - In 'cynical_take', express mild sadness that such a potentially good role is hidden behind a corporate firewall.
 
     REPORT FORMAT:
     Return strictly JSON matching this interface:

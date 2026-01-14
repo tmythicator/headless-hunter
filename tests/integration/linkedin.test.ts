@@ -1,0 +1,40 @@
+import { describe, test, expect } from 'bun:test';
+import { harvestLinksFromPage, scrapeContentLocal } from '@/tools';
+import linkedinTargets from '../fixtures/linkedin_targets.json';
+
+const TEST_CASES = linkedinTargets;
+
+describe('LinkedIn Harvester (Live)', () => {
+  const TIMEOUT = 120000;
+
+  for (const testCase of TEST_CASES) {
+    test(
+      `should harvest links from ${testCase.name}`,
+      async () => {
+        console.log(`Attempting to harvest: ${testCase.url}`);
+        const links = await harvestLinksFromPage(testCase.url);
+        console.log(`Found ${links.length} links`);
+
+        if (links.length > 0) {
+          expect(links[0]).toHaveProperty('url');
+          expect(links[0]).toHaveProperty('title');
+
+          const jobLinks = links.filter(
+            (l) => l.url.includes('/jobs/view') || l.url.includes('currentJobId')
+          );
+
+          const firstLink = links[0].url;
+          console.log(`Attempting to scrape content from: ${firstLink}`);
+          const content = await scrapeContentLocal(firstLink);
+
+          await Bun.write('tests/integration/linkedin_debug.txt', content);
+          expect(typeof content).toBe('string');
+          expect(content.length).toBeGreaterThan(50);
+        } else {
+          console.warn(`Harvested 0 links from ${testCase.url}. Likely bot-blocked or authwall.`);
+        }
+      },
+      TIMEOUT
+    );
+  }
+});

@@ -1,13 +1,16 @@
 import { describe, expect, test, spyOn, afterAll } from 'bun:test';
-import { scoutNode } from '@/agent/nodes';
-import { ScoutSummary } from '@/types';
+import { scoutNode, analystNode, reporterNode } from '@/agent/nodes';
+import { ScoutSummary, TavilySearchResult } from '@/types';
 import * as tools from '@/tools';
 import { join } from 'path';
 import mockTavilyResults from '../fixtures/tavily_search_results.json';
 
 describe('Ollama Integration (Scout Node)', () => {
   const TIMEOUT = 240000;
-  const searchSpy = spyOn(tools, 'searchJobsInDach').mockResolvedValue(mockTavilyResults);
+
+  const searchSpy = spyOn(tools, 'searchJobsInDach').mockResolvedValue(
+    mockTavilyResults.results as unknown as TavilySearchResult[]
+  );
   const outputFile = 'tests/integration/ollama_test_result.md';
 
   afterAll(() => {
@@ -35,14 +38,47 @@ describe('Ollama Integration (Scout Node)', () => {
         resume_path: null,
         config_output_path: outputFile,
         scout_summary: { market_summary: '', jobs: [] },
+        total_jobs: 0,
+        processed_jobs: 0,
+        job_targets: [],
+        scraped_knowledge: '',
+        successful_scrapes: [],
+        search_results: '',
+        is_finished: false,
+        search_count: 0,
       };
 
-      const result = await scoutNode(mockState);
-      const summary = result.scout_summary as unknown as ScoutSummary; // Cast for testing
+      // 1. Test scoutNode (discovery)
+      const scoutResult = await scoutNode(mockState);
+      expect(scoutResult.job_targets.length).toBeGreaterThan(0);
+      expect(scoutResult.total_jobs).toBeGreaterThan(0);
+      expect(scoutResult.search_count).toBeGreaterThan(0);
 
-      expect(result.messages).toHaveLength(1);
+      // 2. Test analystNode (simple processing)
+      const analystState = {
+        ...mockState,
+        ...scoutResult,
+      };
+      const analystResult = await analystNode(analystState);
+      expect(analystResult.processed_jobs).toBe(1);
+      expect(analystResult.job_targets).toHaveLength(scoutResult.job_targets.length - 1);
+
+      // 3. Test reporterNode (reporting)
+      const reporterState = {
+        ...analystState,
+        ...analystResult,
+        job_targets: [], // Simulate finishing processing
+        scraped_knowledge: 'Dummy knowledge for report generation',
+        search_results: JSON.stringify(mockTavilyResults.results, null, 2),
+      };
+
+      const reporterResult = await reporterNode(reporterState);
+      const summary = reporterResult.scout_summary as unknown as ScoutSummary;
+
+      expect(reporterResult.messages).toHaveLength(1);
       expect(summary.jobs.length).toBeGreaterThan(0);
       expect(summary.market_summary).toBeTruthy();
+      expect(reporterResult.is_finished).toBe(true);
 
       const file = Bun.file(outputFile);
       expect(await file.exists()).toBe(true);

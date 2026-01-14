@@ -19,6 +19,9 @@ const mockHook = mock(
     phase: WorkflowPhase.INPUT,
     logs: [],
     finalResult: '',
+    totalJobs: 0,
+    processedJobs: 0,
+    searchCount: 0,
     startWorkflow: mockStartWorkflow,
     setPhase: mock(),
   })
@@ -50,11 +53,17 @@ describe('HeadlessHunter', () => {
   });
 
   test('renders working state correctly', () => {
-    const logs = ['Log 1', 'Log 2'];
+    const logs = [
+      { id: 1, message: 'Log 1' },
+      { id: 2, message: 'Log 2' },
+    ];
     mockHook.mockReturnValue({
       phase: WorkflowPhase.WORKING,
       logs,
       finalResult: mockFinalResult,
+      totalJobs: 0,
+      processedJobs: 0,
+      searchCount: 0,
       startWorkflow: mockStartWorkflow,
       setPhase: mock(),
     });
@@ -63,8 +72,8 @@ describe('HeadlessHunter', () => {
     const output = stripAnsi(lastFrame() ?? '');
     expect(output).toContain(APP_AGENT_HUNTING);
     expect(output).toContain(APP_PROCESSING_STREAM);
-    expect(output).toContain(logs[0]);
-    expect(output).toContain(logs[1]);
+    expect(output).toContain(logs[0].message);
+    expect(output).toContain(logs[1].message);
     expect(output).not.toContain(mockFinalResult);
     expect(output).not.toContain(APP_REPORT_TITLE);
     expect(output).not.toContain(APP_REPORT_EXIT);
@@ -75,6 +84,9 @@ describe('HeadlessHunter', () => {
       phase: WorkflowPhase.DONE,
       logs: [],
       finalResult: mockFinalResult,
+      totalJobs: 0,
+      processedJobs: 0,
+      searchCount: 0,
       startWorkflow: mockStartWorkflow,
       setPhase: mock(),
     });
