@@ -23,28 +23,33 @@ Stop hunting. Start matching.
 #+BEGIN_EXAMPLE
 [Resume] + [Wishes]
       ↓
-(LLM Profiler) → Formulates Search Strategy
+(Profiler) → Extracts Strategy (Keywords, Location, Vibe)
       ↓
-(The Harvester) → Deep Scrapes bypassing aggregators
+(Scout)    → Wide Discovery (Tavily/DDG Search)
       ↓
-(Cynical Scout) → Aggressive Technical Filtering
+(Analyst)  → Deep Extraction (Puppeteer/Headless Scraping)
       ↓
-[High-Fidelity Report]
+(Reporter) → Final Synthesis (Resume Cross-Referencing)
+      ↓
+[Final Report]
 #+END_EXAMPLE
 
-- *Broad Discovery (Tavily)*: Instead of relying on traditional search engines that are cluttered with SEO spam, we use Tavily's AI-native search to identify high-potential job URLs.
-- *Deep Harvesting (Puppeteer)*: The "Harvester" uses a headless browser to bypass standard scrapers' limitations.
+- *Broad Discovery (Tavily)*: Uses Tavily's AI search for production discovery.
+- *Free Discovery (Puppeteer)*: In ~test~ environments, uses privacy-friendly search (DuckDuckGo) to save API costs.
+- *Deep Harvesting (Puppeteer)*: The "Harvester" extracts full context locally, bypassing API limits.
 ** Features
 
 - *Intelligent Scouting*: LLM-driven planning that understands the *context* of your resume, not just keywords.
+- *Expanded Deep Scan*: Automatically processes every direct job link found in the initial search for maximum coverage.
 - *The Harvester*: A Puppeteer-based powerhouse that extracts full context from LinkedIn, Glassdoor, and direct career pages.
+- *Real-time Feedback*: Live progress tracking including global search results and granular deep-scan status: `[Search: 25 | Scans: 4/4]`.
 - *Cynical Analysis*: A specialized persona that cuts through HR-speak to find genuine technical alignment.
 - *Nix-Powered*: A single command (~nix develop~) to get the entire stack (Bun, Puppeteer, etc) running.
 
 ** Prerequisites
 
 - [[https://nixos.org/][Nix]] (flakes enabled) — *The only dependency you need to manage.*
-- [[https://tavily.com/][Tavily API Key]] (for initial discovery)
+- [[https://tavily.com/][Tavily API Key]] (Optional, required only for Production Mode search)
 - [[https://ollama.com/][Ollama]] — For 100% private, local inference.
 
 ** Quick Start
@@ -66,9 +71,11 @@ Stop hunting. Start matching.
 
 ** Advanced Configuration
 
-The agent uses a dual-role strategy:
-1.  **PROFILER**: Analyzes your resume/intent.
-2.  **SCOUT**: Reads and analyzes job descriptions.
+The agent uses a four-node specialized strategy:
+1.  **PROFILER**: Analyzes your resume/intent to build a search strategy.
+2.  **SCOUT**: Executes broad searches to find primary targets.
+3.  **ANALYST**: Deeply scrapes individual job pages for full context.
+4.  **REPORTER**: Synthesizes everything into a cynical final report.
 
 You can mix and match providers in your ~.env~:
 
@@ -88,24 +95,34 @@ bun run format
 #+END_SRC
 
 ** Testing
+The system detects ~bun test~ (via ~NODE_ENV=test~) and automatically switches to **Free Mode**:
+- *Search*: DuckDuckGo (HTML) via Puppeteer (No API Key needed)
+- *Extraction*: Local Puppeteer Scraper (No API Key needed)
 
 #+BEGIN_SRC bash
 bun test
 #+END_SRC
 
-Specific test modules:
-- *Harvester (Scraping)*: ~bun test tests/integration/glassdoor.test.ts~
-- *Reasoning (Ollama)*: ~bun test tests/integration/ollama.test.ts~
-- *Visuals*: ~bun run test:render~ (Debug terminal markdown rendering)
+*** Specific Test Workflows
+- *Check Search*: ~bun test tests/integration/search.test.ts~ (Verifies Free Mode Search)
+- *Check Scrapers*: ~bun test tests/integration/extract.test.ts~ (Verifies Local Extraction)
+- *Glassdoor/LinkedIn*: ~bun test tests/integration/{glassdoor,linkedin}.test.ts~
+  - /Note: These tests hit **LIVE** URLs defined in ~tests/fixtures/*_targets.json~. They verify real-world connectivity./
+
+
 
 ** Architecture
 
 Built on a *RAG-enhanced Agentic Workflow* using *LangGraph*.
 
-- *Agentic State Machine* (~src/state.ts~): Manages conversation history and long-term memory using a cyclic graph architecture.
-- *Reasoning Engine* (~src/nodes.ts~): Uses Chain-of-Thought (CoT) to plan, execute, and refine search strategies.
-- *Hybrid RAG Pipeline* (~src/tools.ts~): Combines broad API search (Tavily) with deep, headless browser scraping (Puppeteer) to feed high-fidelity data into the context window.
-- *Model Abstraction* (~src/model_factory.ts~): Supports both Local Inference (Edge AI via Ollama) and Cloud LLMs (Gemini) through a unified interface.
+- *Agentic State Machine* (~src/agent/graph.ts~): Manages state transitions across four specialized nodes.
+- *The Nodes* (~src/agent/nodes.ts~):
+  - *Profiler*: The strategist. Distills resume + input into machine-readable JSON criteria.
+  - *Scout*: The look-out. Uses Tavily (Production) or DuckDuckGo (Test) for broad discovery.
+  - *Analyst*: The researcher. Iteratively processes URLs, distinguishing between job posts and "harvester" list pages.
+  - *Reporter*: The judge. Cross-references all scraped data against your original resume for final verdict.
+- *Robust Output Recovery* (~src/utils/index.ts~): Specialized JSON handlers that strip hallucinations (like JS comments) from model responses.
+- *Hybrid RAG Pipeline* (~src/tools/*~): Combines high-fidelity API search with local, headless browser extraction.
 
 ** License
 
