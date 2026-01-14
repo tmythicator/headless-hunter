@@ -1,12 +1,7 @@
 import { HumanMessage } from '@langchain/core/messages';
 import { getModel } from '@/llm/model_factory';
 import { AgentState } from './state';
-import {
-  searchJobsInDach,
-  extractUrlContent,
-  harvestLinksFromPage,
-  scrapeContentLocal,
-} from '@/tools';
+import { searchJobsInDach, harvestLinksFromPage, scrapeContentLocal } from '@/tools';
 import { ProfilerSummary, TavilySearchResult, ScoutSummary, AgentNode } from '@/types';
 import { loadResume } from '@/tools/resume_loader';
 import { logTrace } from '@/utils/logger';
@@ -42,9 +37,7 @@ export async function profilerNode(state: typeof AgentState.State) {
 }
 
 export async function scoutNode(state: typeof AgentState.State) {
-  const model = getModel(AgentNode.SCOUT);
   const profilerSummary = state.profiler_summary;
-  const resume = state.user_input_resume;
 
   const baseQuery = `${profilerSummary.role} ${profilerSummary.keywords.slice(0, 3).join(' ')} ${profilerSummary.location} ${profilerSummary.country ?? ''}`;
   const siteConstraints = [
@@ -60,7 +53,7 @@ export async function scoutNode(state: typeof AgentState.State) {
 
   const query = `${baseQuery} (${siteConstraints}) "apply" -inurl:search -inurl:SRCH -inurl:jobs-at`;
 
-  // 2. Initial Search
+  // 1. Initial Search
   const searchResults = await searchJobsInDach(query, {
     max_results: 25,
     search_depth: 'advanced',
@@ -68,14 +61,11 @@ export async function scoutNode(state: typeof AgentState.State) {
   const searchResultsString = JSON.stringify(searchResults, null, 2);
   await logTrace(LOG_STAGE_SCOUT_SEARCH, query, searchResultsString);
 
-  // 3. Collect verified links
-  const verifiedLinksMap = new Map<string, string>();
-  searchResults.forEach((r: TavilySearchResult) => {
-    if (r.url) verifiedLinksMap.set(r.url, r.title || 'No Title');
-  });
+  // 2. Identify all targets
+  const targets = new Set<string>();
 
-  // Harvester (Local Puppeteer)
-  const harvestTargets = searchResults
+  // Harvester candidates
+  searchResults
     .filter(
       (r: TavilySearchResult) =>
         r.url &&
@@ -88,66 +78,84 @@ export async function scoutNode(state: typeof AgentState.State) {
             !r.url.includes('/view/') &&
             !r.url.includes('/job/')))
     )
-    .slice(0, 2);
+    .slice(0, 2)
+    .forEach((r) => targets.add(r.url));
 
-  let scrapedKnowledge = '';
+  // Direct candidates
+  searchResults
+    .filter((r: TavilySearchResult) => !r.url.includes('glassdoor') && !r.url.includes('search'))
+    .forEach((r) => targets.add(r.url));
 
-  // Harvest locally
-  const successfulScrapes = new Set<string>();
+  return {
+    job_targets: Array.from(targets),
+    total_jobs: targets.size,
+    processed_jobs: 0,
+    search_results: searchResultsString,
+    search_count: searchResults.length,
+    messages: [new HumanMessage(`Scout found ${targets.size} primary targets.`)],
+  };
+}
 
-  if (harvestTargets.length > 0) {
-    for (const target of harvestTargets) {
-      const harvestedJobs = await harvestLinksFromPage(target.url);
+export async function analystNode(state: typeof AgentState.State) {
+  // Case 1: More jobs to process
+  if (state.job_targets.length > 0) {
+    const url = state.job_targets[0];
+    const remainingTargets = state.job_targets.slice(1);
+    let newKnowledge = '';
+    const newScrapes: string[] = [];
+
+    // Check if it's a harvester link (heuristic)
+    const isHarvester =
+      url.includes('glassdoor') ||
+      url.includes('linkedin.com/jobs/search') ||
+      url.includes('stepstone') ||
+      url.includes('indeed');
+
+    if (isHarvester) {
+      const harvestedJobs = await harvestLinksFromPage(url);
       if (harvestedJobs.length > 0) {
-        // Add harvested links to verified map
-        harvestedJobs.forEach((job) => verifiedLinksMap.set(job.url, `Harvested: ${job.title}`));
-
-        // Scrape content locally (Saving Tavily Quota)
-        // Only scrape the first 3 harvested links per list to save time/bandwidth
-        const bestJobs = harvestedJobs.slice(0, 3);
-
+        // Scrape 2 harvested links to save time
+        const bestJobs = harvestedJobs.slice(0, 2);
         for (const job of bestJobs) {
           const content = await scrapeContentLocal(job.url);
           if (content.length > 100) {
-            scrapedKnowledge += `\n\n--- HARVESTED JOB SOURCE: ${job.url} (${job.title}) ---\n${content}\n`;
-            successfulScrapes.add(job.url);
+            newKnowledge += `\n\n--- HARVESTED JOB SOURCE: ${job.url} (${job.title}) ---\n${content}\n`;
+            newScrapes.push(job.url);
           }
         }
       }
+    } else {
+      // Direct scrape
+      const content = await scrapeContentLocal(url);
+      if (content.length > 100) {
+        newKnowledge += `\n\n--- SOURCE: ${url} ---\n${content}`;
+        newScrapes.push(url);
+      }
     }
+
+    return {
+      job_targets: remainingTargets,
+      processed_jobs: state.processed_jobs + 1,
+      scraped_knowledge: newKnowledge,
+      successful_scrapes: newScrapes,
+      messages: [new HumanMessage(`Processed ${url}`)],
+    };
   }
+  return {};
+}
 
-  if (scrapedKnowledge.length < 500) {
-    const directLinks = searchResults
-      .filter((r: TavilySearchResult) => !r.url.includes('glassdoor') && !r.url.includes('search'))
-      .slice(0, 2)
-      .map((r: TavilySearchResult) => r.url);
-
-    if (directLinks.length > 0) {
-      const scrapedDocs = await extractUrlContent(directLinks);
-      scrapedDocs.forEach((d: TavilySearchResult) => {
-        const txt = d.raw_content ?? d.content ?? '';
-        scrapedKnowledge += `\n\n--- TAVILY SOURCE: ${d.url} ---\n${txt}`;
-        if (txt.length > 100) successfulScrapes.add(d.url);
-      });
-    }
-  }
-
-  const verifiedLinksLibrary = Array.from(verifiedLinksMap.entries())
-    .map(([url, title]) => {
-      return `- ${title}: ${url}`;
-    })
-    .join('\n');
-
-  const verifiedScrapesList = Array.from(successfulScrapes).join('\n');
+export async function reporterNode(state: typeof AgentState.State) {
+  const model = getModel(AgentNode.SCOUT);
+  const profilerSummary = state.profiler_summary;
+  const resume = state.user_input_resume;
 
   const scoutPrompt = createScoutPrompt(
     profilerSummary,
     resume,
-    searchResultsString,
-    scrapedKnowledge,
-    verifiedLinksLibrary,
-    verifiedScrapesList
+    state.search_results,
+    state.scraped_knowledge,
+    'See previous logs for full library',
+    state.successful_scrapes.join('\n')
   );
 
   const response = await model.invoke([new HumanMessage(scoutPrompt)]);
@@ -157,9 +165,7 @@ export async function scoutNode(state: typeof AgentState.State) {
   });
 
   let markdownReport = '';
-
   try {
-    // Generate Markdown for UI/File
     markdownReport = `# Headless Hunter Report\n\n`;
     markdownReport += `**Market Summary:** ${scoutSummary.market_summary}\n\n`;
     markdownReport += `## Top Picks\n\n`;
@@ -190,5 +196,6 @@ export async function scoutNode(state: typeof AgentState.State) {
   return {
     messages: [new HumanMessage(markdownReport)],
     scout_summary: scoutSummary,
+    is_finished: true,
   };
 }

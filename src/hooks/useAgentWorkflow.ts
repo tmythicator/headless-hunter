@@ -18,25 +18,43 @@ import {
   UI_ERROR,
 } from '@/config/constants';
 
+export interface LogItem {
+  id: number;
+  message: string;
+}
+
 export interface AgentWorkflow {
   phase: WorkflowPhase;
-  logs: string[];
+  logs: LogItem[];
   finalResult: string;
+  totalJobs: number;
+  processedJobs: number;
+  searchCount: number;
   startWorkflow: (query: string, resumePath: string | null) => Promise<void>;
   setPhase: (phase: WorkflowPhase) => void;
 }
 
 export const useAgentWorkflow = (): AgentWorkflow => {
   const [phase, setPhase] = useState<WorkflowPhase>(WorkflowPhase.RESUME_SELECTION);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<LogItem[]>([]);
   const [finalResult, setFinalResult] = useState<string>('');
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [processedJobs, setProcessedJobs] = useState(0);
+  const [searchCount, setSearchCount] = useState(0);
 
   const addLog = useCallback((msg: string) => {
-    setLogs((prev) => [...prev.slice(-10), msg]);
+    setLogs((prev) => [...prev, { id: Date.now() + Math.random(), message: msg }]);
   }, []);
 
   const startWorkflow = async (query: string, resumePath: string | null) => {
+    // Clear the terminal to avoid ghosting from previous runs
+    process.stdout.write('\x1Bc');
+
     setPhase(WorkflowPhase.WORKING);
+    setLogs([]);
+    setTotalJobs(0);
+    setProcessedJobs(0);
+    setSearchCount(0);
 
     // Generate paths synchronously to ensure they match
     const resultPath = getNextHuntFilePath();
@@ -73,10 +91,43 @@ export const useAgentWorkflow = (): AgentWorkflow => {
           if (step[AgentNode.SCOUT]) {
             const data = step[AgentNode.SCOUT];
             addLog(UI_STEP_FINISHED(AgentNode.SCOUT));
+            if (data?.total_jobs !== undefined) setTotalJobs(data.total_jobs);
+            if (data?.search_count !== undefined) {
+              setSearchCount(data.search_count);
+              addLog(`🔍  Global search returned ${data.search_count} potential links.`);
+            }
+          }
+
+          if (step[AgentNode.ANALYST]) {
+            const data = step[AgentNode.ANALYST];
+            if (data?.processed_jobs !== undefined) {
+              setProcessedJobs(data.processed_jobs);
+              // Provide visual feedback for small iterations
+              if (data.messages && data.messages.length > 0) {
+                const msg = data.messages[data.messages.length - 1].content;
+                if (typeof msg === 'string' && msg.startsWith('Processed')) {
+                  addLog(`🛡️  ${msg}`);
+                }
+              }
+            }
+
+            // If we just finished the last job, signal the final phase immediately
+            if (data?.job_targets?.length === 0) {
+              addLog('🖋️  Scanning complete. Synthesizing final report with LLM...');
+            }
+          }
+
+          if (step[AgentNode.REPORTER]) {
+            const data = step[AgentNode.REPORTER];
 
             if (data?.messages && data.messages.length > 0) {
-              const content = data.messages[0].content;
-              setFinalResult(ensureString(content));
+              const lastMessage = data.messages[data.messages.length - 1];
+              const content = lastMessage.content;
+
+              if (typeof content === 'string' && content.length > 100) {
+                setFinalResult(ensureString(content));
+                addLog(UI_STEP_FINISHED(AgentNode.REPORTER));
+              }
             }
           }
         }
@@ -93,6 +144,9 @@ export const useAgentWorkflow = (): AgentWorkflow => {
     phase,
     logs,
     finalResult,
+    totalJobs,
+    processedJobs,
+    searchCount,
     startWorkflow,
     setPhase,
   };

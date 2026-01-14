@@ -24,6 +24,8 @@ export interface ModelConfig {
 export enum AgentNode {
   PROFILER = 'profiler',
   SCOUT = 'scout',
+  ANALYST = 'analyst',
+  REPORTER = 'reporter',
 }
 
 export enum ProviderType {

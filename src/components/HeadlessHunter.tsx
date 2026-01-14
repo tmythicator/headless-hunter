@@ -12,7 +12,16 @@ import { WorkflowPhase } from '@/types';
 export const HeadlessHunter = () => {
   const [query, setQuery] = useState('');
   const [resumePath, setResumePath] = useState<string | null>(null);
-  const { phase, logs, finalResult, startWorkflow, setPhase } = useAgentWorkflow();
+  const {
+    phase,
+    logs,
+    finalResult,
+    totalJobs,
+    processedJobs,
+    searchCount,
+    startWorkflow,
+    setPhase,
+  } = useAgentWorkflow();
 
   const handleResumeSelect = (path: string | null) => {
     setResumePath(path);
@@ -48,7 +57,13 @@ export const HeadlessHunter = () => {
         />
       )}
 
-      <StatusSection phase={phase} logs={logs} />
+      <StatusSection
+        phase={phase}
+        logs={logs}
+        totalJobs={totalJobs}
+        processedJobs={processedJobs}
+        searchCount={searchCount}
+      />
 
       {phase === WorkflowPhase.DONE && <ReportSection finalResult={finalResult} />}
     </Box>

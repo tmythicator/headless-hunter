@@ -43,6 +43,46 @@ export const AgentState = Annotation.Root({
     reducer: (_x, y) => y,
     default: () => getNextHuntFilePath(),
   }),
+
+  total_jobs: Annotation<number>({
+    reducer: (_x, y) => y,
+    default: () => 0,
+  }),
+
+  processed_jobs: Annotation<number>({
+    reducer: (_x, y) => y,
+    default: () => 0,
+  }),
+
+  job_targets: Annotation<string[]>({
+    reducer: (_x, y) => y,
+    default: () => [],
+  }),
+
+  scraped_knowledge: Annotation<string>({
+    reducer: (x, y) => x + y,
+    default: () => '',
+  }),
+
+  successful_scrapes: Annotation<string[]>({
+    reducer: (x, y) => [...x, ...y],
+    default: () => [],
+  }),
+
+  search_results: Annotation<string>({
+    reducer: (_x, y) => y,
+    default: () => '',
+  }),
+
+  is_finished: Annotation<boolean>({
+    reducer: (_x, y) => y,
+    default: () => false,
+  }),
+
+  search_count: Annotation<number>({
+    reducer: (_x, y) => y,
+    default: () => 0,
+  }),
 });
 
 export type AgentStateType = typeof AgentState.State;

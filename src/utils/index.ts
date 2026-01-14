@@ -3,42 +3,49 @@ import path from 'path';
 import { AIMessageChunk } from '@langchain/core/messages';
 import { logTrace } from './logger';
 import { ensureString } from '@/tools';
-import { LOG_MSG_RAW_CONTENT, LOG_MSG_JSON_ERROR, LOG_MSG_MODEL_FAILED } from '@/config/constants';
+import { LOG_MSG_RAW_CONTENT, LOG_MSG_JSON_ERROR } from '@/config/constants';
 
 export async function getParsedModelOutput<T>(
   modelResponse: AIMessageChunk,
   nodeName: string,
   fallbackValue: T
 ): Promise<T> {
+  const contentStr = ensureString(modelResponse.content);
+  await logTrace(nodeName, LOG_MSG_RAW_CONTENT, contentStr);
+
+  let cleanJson = contentStr;
+
   try {
-    const contentStr = ensureString(modelResponse.content);
-
-    await logTrace(nodeName, LOG_MSG_RAW_CONTENT, contentStr);
-
-    // Compact and robust extraction
-    let cleanJson = contentStr;
+    // 1. Try extracting from markdown code blocks first
     const jsonBlock = /```json([\s\S]*?)```/.exec(contentStr);
-
     if (jsonBlock) {
       cleanJson = jsonBlock[1].trim();
     } else {
-      // Find valid JSON start/end characters
+      // 2. Fallback: Find outermost JSON-like structure
       const firstOpen = contentStr.search(/[{[]/);
-      const lastClose = contentStr.search(/[}\]][^}\]]*$/); // Last closing bracket/brace
-
+      const lastClose = contentStr.search(/[}\]][^}\]]*$/);
       if (firstOpen !== -1 && lastClose !== -1) {
         cleanJson = contentStr.slice(firstOpen, lastClose + 1);
       }
     }
 
-    try {
-      return JSON.parse(cleanJson) as T;
-    } catch (_parseError) {
-      await logTrace(`${nodeName}_ERROR`, LOG_MSG_JSON_ERROR, cleanJson);
-      return fallbackValue;
-    }
+    // 3. Attempt to fix common LLM JSON errors (trailing commas and comments)
+    // Strip comments while respecting strings (don't break URLs like https://)
+    let fixedJson = cleanJson.replace(
+      /("(?:\\.|[^\\"])*")|\/\*[\s\S]*?\*\/|\/\/.*/g,
+      (match, group1: string | undefined) => group1 ?? ''
+    );
+
+    // Strip trailing commas
+    fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
+
+    return JSON.parse(fixedJson) as T;
   } catch (error) {
-    await logTrace(`${nodeName}_ERROR`, LOG_MSG_MODEL_FAILED, String(error));
+    await logTrace(
+      `${nodeName}_ERROR`,
+      LOG_MSG_JSON_ERROR,
+      `Failed to parse: ${cleanJson.substring(0, 200)}... (Error: ${String(error)})`
+    );
     return fallbackValue;
   }
 }
