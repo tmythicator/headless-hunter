@@ -26,6 +26,7 @@ export enum AgentNode {
   SCOUT = 'scout',
   ANALYST = 'analyst',
   REPORTER = 'reporter',
+  RECOVERY = 'recovery',
 }
 
 export enum ProviderType {

@@ -1,6 +1,14 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, mock } from 'bun:test';
 import { getParsedModelOutput } from '@/utils';
 import { AIMessageChunk } from '@langchain/core/messages';
+
+void mock.module('@/llm/model_factory', () => {
+  return {
+    getModel: () => ({
+      invoke: () => Promise.reject(new Error('UnitTest: Recovery Model Failure')),
+    }),
+  };
+});
 
 describe('Utils: getParsedModelOutput', () => {
   type TestResult = { key: string } | { id: number }[] | { error: boolean };

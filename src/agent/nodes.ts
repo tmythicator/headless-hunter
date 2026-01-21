@@ -36,6 +36,34 @@ export async function profilerNode(state: typeof AgentState.State) {
   };
 }
 
+function isHarvesterLink(r: TavilySearchResult): boolean {
+  if (!r.url) return false;
+  const url = r.url.toLowerCase();
+  const title = r.title ? r.title.toLowerCase() : '';
+
+  // Explicit Harvester Domains
+  if (
+    url.includes('glassdoor') ||
+    url.includes('linkedin.com/jobs/search') ||
+    url.includes('stepstone') ||
+    url.includes('indeed')
+  ) {
+    return true;
+  }
+
+  // Heuristic: "Jobs" in title but not a specific job view
+  if (title.includes('jobs') && !url.includes('/view/') && !url.includes('/job/')) {
+    return true;
+  }
+
+  return false;
+}
+
+function isDirectCompanyLink(r: TavilySearchResult): boolean {
+  if (!r.url) return false;
+  return !r.url.includes('glassdoor') && !r.url.includes('search');
+}
+
 export async function scoutNode(state: typeof AgentState.State) {
   const profilerSummary = state.profiler_summary;
 
@@ -64,27 +92,14 @@ export async function scoutNode(state: typeof AgentState.State) {
   // 2. Identify all targets
   const targets = new Set<string>();
 
-  // Harvester candidates
+  // Harvester candidates (Top 2)
   searchResults
-    .filter(
-      (r: TavilySearchResult) =>
-        r.url &&
-        (r.url.includes('glassdoor') ||
-          r.url.includes('linkedin.com/jobs/search') ||
-          r.url.includes('stepstone') ||
-          r.url.includes('indeed') ||
-          (r.title &&
-            r.title.toLowerCase().includes('jobs') &&
-            !r.url.includes('/view/') &&
-            !r.url.includes('/job/')))
-    )
+    .filter((r) => isHarvesterLink(r))
     .slice(0, 2)
     .forEach((r) => targets.add(r.url));
 
   // Direct candidates
-  searchResults
-    .filter((r: TavilySearchResult) => !r.url.includes('glassdoor') && !r.url.includes('search'))
-    .forEach((r) => targets.add(r.url));
+  searchResults.filter((r) => isDirectCompanyLink(r)).forEach((r) => targets.add(r.url));
 
   return {
     job_targets: Array.from(targets),

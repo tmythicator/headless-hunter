@@ -1,9 +1,76 @@
 import fs from 'fs';
 import path from 'path';
-import { AIMessageChunk } from '@langchain/core/messages';
+import { AIMessageChunk, HumanMessage } from '@langchain/core/messages';
 import { logTrace } from './logger';
 import { ensureString } from '@/tools';
 import { LOG_MSG_RAW_CONTENT, LOG_MSG_JSON_ERROR } from '@/config/constants';
+import { getModel } from '@/llm/model_factory';
+import { AgentNode } from '@/types';
+
+async function fixMalformedJson<T>(jsonCarcass: string, error: unknown): Promise<T | null> {
+  try {
+    const recoveryModel = getModel(AgentNode.RECOVERY);
+    const prompt = `
+    You are a JSON repair expert.
+    I have a malformed/truncated JSON string.
+    Your task:
+    1. Identify the cut-off point.
+    2. Auto-complete the structure (close objects/arrays) to make it valid.
+    3. Return ONLY the valid JSON.
+
+    MALFORMED JSON:
+    ${jsonCarcass}
+
+    ERROR:
+    ${String(error)}
+    `;
+
+    const response = await recoveryModel.invoke([new HumanMessage(prompt)]);
+    const fixedStr = ensureString(response.content);
+    // Extract JSON block if present
+    const jsonBlock = /```json([\s\S]*?)```/.exec(fixedStr);
+    const cleanJson = jsonBlock ? jsonBlock[1].trim() : fixedStr;
+    return JSON.parse(cleanJson) as T;
+  } catch (_e) {
+    return null;
+  }
+}
+
+function extractJsonCandidate(content: string): string {
+  // 1. Try extracting from markdown code blocks first
+  const jsonBlock = /```json([\s\S]*?)```/.exec(content);
+  if (jsonBlock) {
+    return jsonBlock[1].trim();
+  }
+
+  // 2. Fallback: Find outermost JSON-like structure
+  const firstOpen = content.search(/[{[]/);
+  // Match the last closing brace/bracket that isn't followed by another closing brace/bracket
+  const lastClose = content.search(/[}\]][^}\]]*$/);
+
+  if (firstOpen !== -1 && lastClose !== -1) {
+    return content.slice(firstOpen, lastClose + 1);
+  }
+
+  return content;
+}
+
+function cleanJsonString(jsonCandidate: string): string {
+  // 1. Strip comments while respecting strings
+  // - ("(?:\\.|[^\\"])*"): Match double-quoted strings (ignoring escaped quotes) -> keep group1
+  // - \/\*[\s\S]*?\*\/ : Match block comments /* ... */ -> replace with empty
+  // - \/\/.* : Match line comments // ... -> replace with empty
+  let fixed = jsonCandidate.replace(
+    /("(?:\\.|[^\\"])*")|\/\*[\s\S]*?\*\/|\/\/.*/g,
+    (_match, group1: string | undefined) => group1 ?? ''
+  );
+
+  // 2. Strip trailing commas before closing braces/brackets
+  // Regex: Match a comma followed by whitespace and a closing brace/bracket
+  fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+
+  return fixed;
+}
 
 export async function getParsedModelOutput<T>(
   modelResponse: AIMessageChunk,
@@ -13,39 +80,29 @@ export async function getParsedModelOutput<T>(
   const contentStr = ensureString(modelResponse.content);
   await logTrace(nodeName, LOG_MSG_RAW_CONTENT, contentStr);
 
-  let cleanJson = contentStr;
+  const cleanJson = extractJsonCandidate(contentStr);
+  const finalJsonString = cleanJsonString(cleanJson);
 
   try {
-    // 1. Try extracting from markdown code blocks first
-    const jsonBlock = /```json([\s\S]*?)```/.exec(contentStr);
-    if (jsonBlock) {
-      cleanJson = jsonBlock[1].trim();
-    } else {
-      // 2. Fallback: Find outermost JSON-like structure
-      const firstOpen = contentStr.search(/[{[]/);
-      const lastClose = contentStr.search(/[}\]][^}\]]*$/);
-      if (firstOpen !== -1 && lastClose !== -1) {
-        cleanJson = contentStr.slice(firstOpen, lastClose + 1);
-      }
-    }
-
-    // 3. Attempt to fix common LLM JSON errors (trailing commas and comments)
-    // Strip comments while respecting strings (don't break URLs like https://)
-    let fixedJson = cleanJson.replace(
-      /("(?:\\.|[^\\"])*")|\/\*[\s\S]*?\*\/|\/\/.*/g,
-      (match, group1: string | undefined) => group1 ?? ''
-    );
-
-    // Strip trailing commas
-    fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
-
-    return JSON.parse(fixedJson) as T;
+    return JSON.parse(finalJsonString) as T;
   } catch (error) {
     await logTrace(
       `${nodeName}_ERROR`,
       LOG_MSG_JSON_ERROR,
-      `Failed to parse: ${cleanJson.substring(0, 200)}... (Error: ${String(error)})`
+      `Failed to parse: ${cleanJson.substring(0, 512)}... (Error: ${String(error)})`
     );
+
+    // Attempt Recovery
+    const recovered = await fixMalformedJson<T>(cleanJson, error);
+    if (recovered) {
+      await logTrace(
+        `${nodeName}_RECOVERY`,
+        'JSON Recovery',
+        'Successfully recovered JSON via LLM'
+      );
+      return recovered;
+    }
+
     return fallbackValue;
   }
 }
@@ -83,8 +140,6 @@ export function getLogFilePath(resultFilePath: string): string {
   const dir = path.dirname(resultFilePath);
   const base = path.basename(resultFilePath, '.md');
 
-  // Expected format: hunt-001.md -> hunt-log-001.log
-  // If base is 'hunt-001', we want 'hunt-log-001.log'
   const logBase = base.startsWith('hunt-') ? base.replace('hunt-', 'hunt-log-') : `${base}-log`;
 
   return path.join(dir, `${logBase}.log`);

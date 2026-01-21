@@ -18,112 +18,38 @@ Stop hunting. Start matching.
 3.  *Privacy First*: Run the entire reasoning engine locally with Ollama. No data leaks.
 4.  *Cynical Analysis*: The agent is trained to be skeptical, filtering out roles that don't match your technical depth.
 
-** How it works
-
-#+BEGIN_EXAMPLE
-[Resume] + [Wishes]
-      ↓
-(Profiler) → Extracts Strategy (Keywords, Location, Vibe)
-      ↓
-(Scout)    → Wide Discovery (Tavily/DDG Search)
-      ↓
-(Analyst)  → Deep Extraction (Puppeteer/Headless Scraping)
-      ↓
-(Reporter) → Final Synthesis (Resume Cross-Referencing)
-      ↓
-[Final Report]
-#+END_EXAMPLE
-
-- *Broad Discovery (Tavily)*: Uses Tavily's AI search for production discovery.
-- *Free Discovery (Puppeteer)*: In ~test~ environments, uses privacy-friendly search (DuckDuckGo) to save API costs.
-- *Deep Harvesting (Puppeteer)*: The "Harvester" extracts full context locally, bypassing API limits.
-** Features
-
-- *Intelligent Scouting*: LLM-driven planning that understands the *context* of your resume, not just keywords.
-- *Expanded Deep Scan*: Automatically processes every direct job link found in the initial search for maximum coverage.
-- *The Harvester*: A Puppeteer-based powerhouse that extracts full context from LinkedIn, Glassdoor, and direct career pages.
-- *Real-time Feedback*: Live progress tracking including global search results and granular deep-scan status: `[Search: 25 | Scans: 4/4]`.
-- *Cynical Analysis*: A specialized persona that cuts through HR-speak to find genuine technical alignment.
-- *Nix-Powered*: A single command (~nix develop~) to get the entire stack (Bun, Puppeteer, etc) running.
-
-** Prerequisites
-
-- [[https://nixos.org/][Nix]] (flakes enabled) — *The only dependency you need to manage.*
-- [[https://tavily.com/][Tavily API Key]] (Optional, required only for Production Mode search)
-- [[https://ollama.com/][Ollama]] — For 100% private, local inference.
-
 ** Quick Start
 
-1.  *Shell Up*:
-   #+BEGIN_SRC bash
-   nix develop
-   #+END_SRC
-2.  *Configure*:
-   Copy ~.env-example~ to ~.env~ and add your keys.
-   (See the configuration strategy below for Local vs. Cloud).
-3.  *Feed the Agent*:
-   Drop your ~resume.md~ in the root.
-   - *Tip*: If skipped, the agent will use ~tests/fixtures/resume_example.md~ as a fallback/demo.
-4.  *Launch*:
-   #+BEGIN_SRC bash
-   bun run src/index.tsx
-   #+END_SRC
+1. *Env*: ~nix develop~
+2. *Config*: Copy ~.env-example~ to ~.env~ and add API keys.
+3. *Input*: Drop your ~resume.md~ in the root.
+4. *Run*: ~bun run src/index.tsx~
 
-** Advanced Configuration
+** Workflow & Architecture
 
-The agent uses a four-node specialized strategy:
-1.  **PROFILER**: Analyzes your resume/intent to build a search strategy.
-2.  **SCOUT**: Executes broad searches to find primary targets.
-3.  **ANALYST**: Deeply scrapes individual job pages for full context.
-4.  **REPORTER**: Synthesizes everything into a cynical final report.
+#+BEGIN_EXAMPLE
+[Resume + User Prompt] -> (Profiler) -> (Scout) -> (Analyst) -> (Reporter) -> [Report]
+#+END_EXAMPLE
 
-You can mix and match providers in your ~.env~:
+- *Profiler*: Extracts search criteria (JSON) from resume.
+- *Scout*: Finds targets via Tavily (Prod) or DuckDuckGo (Test).
+- *Analyst*: Deeply scrapes job pages (Puppeteer).
+- *Reporter*: Synthesizes final cynical report.
+- *Recovery*: Repairs malformed LLM outputs, if needed.
 
-#+BEGIN_SRC bash
-# Example: Hybrid (Local for privacy, Cloud for speed)
-LLM_PROVIDER_PROFILER=local
-LLM_PROVIDER_SCOUT=google
-GOOGLE_API_KEY=AIzaSy...
-#+END_SRC
+** Configuration (.env)
 
-** Development
+| Var | Description |
+|-----|-------------|
+| ~LLM_PROVIDER~ | Default provider (~local~ or ~google~). |
+| ~LLM_PROVIDER_{ROLE}~ | Override specific node (e.g. ~LLM_PROVIDER_SCOUT~). |
+| ~GOOGLE_API_KEY~ | Required for Google provider. |
+| ~TAVILY_API_KEY~ | Required for Production Search. |
 
-Linting and formatting:
-#+BEGIN_SRC bash
-bun run lint
-bun run format
-#+END_SRC
+** Dev & Test
 
-** Testing
-The system detects ~bun test~ (via ~NODE_ENV=test~) and automatically switches to **Free Mode**:
-- *Search*: DuckDuckGo (HTML) via Puppeteer (No API Key needed)
-- *Extraction*: Local Puppeteer Scraper (No API Key needed)
-
-#+BEGIN_SRC bash
-bun test
-#+END_SRC
-
-*** Specific Test Workflows
-- *Check Search*: ~bun test tests/integration/search.test.ts~ (Verifies Free Mode Search)
-- *Check Scrapers*: ~bun test tests/integration/extract.test.ts~ (Verifies Local Extraction)
-- *Glassdoor/LinkedIn*: ~bun test tests/integration/{glassdoor,linkedin}.test.ts~
-  - /Note: These tests hit **LIVE** URLs defined in ~tests/fixtures/*_targets.json~. They verify real-world connectivity./
-
-
-
-** Architecture
-
-Built on a *RAG-enhanced Agentic Workflow* using *LangGraph*.
-
-- *Agentic State Machine* (~src/agent/graph.ts~): Manages state transitions across four specialized nodes.
-- *The Nodes* (~src/agent/nodes.ts~):
-  - *Profiler*: The strategist. Distills resume + input into machine-readable JSON criteria.
-  - *Scout*: The look-out. Uses Tavily (Production) or DuckDuckGo (Test) for broad discovery.
-  - *Analyst*: The researcher. Iteratively processes URLs, distinguishing between job posts and "harvester" list pages.
-  - *Reporter*: The judge. Cross-references all scraped data against your original resume for final verdict.
-- *Robust Output Recovery* (~src/utils/index.ts~): Specialized JSON handlers that strip hallucinations (like JS comments) from model responses.
-- *Hybrid RAG Pipeline* (~src/tools/*~): Combines high-fidelity API search with local, headless browser extraction.
+- *Lint/Format*: ~bun run lint~ / ~bun run format~
+- *Test*: ~bun test~ (Switches to Free Mode: DDG + Local Scraper).
 
 ** License
-
 MIT

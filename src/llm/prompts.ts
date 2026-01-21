@@ -72,18 +72,18 @@ export const createScoutPrompt = (
     REPORT FORMAT:
     Return strictly JSON matching this interface:
     interface ScoutSummary {
-      market_summary: string;
+      market_summary: string; // Keep this CONCISE (max 2-3 sentences).
       jobs: {
         title: string;
         company: string;
         location: string;
         verdict: 'Strong Match' | 'Weak Match' | 'Interesting Gamble';
-        badges: string[]; // e.g. "✅ [Verified Live]" or "⚠️ [Tavily interpretation only]"
-        tech_stack: string[]; // e.g. ["React", "TypeScript"]
-        cynical_take: string;
-        why_it_fits: string;
+        badges: string[];
+        tech_stack: string[];
+        cynical_take: string; // Max 1 sentence
+        why_it_fits: string; // Max 1 sentence
         url: string;
       }[];
     }
-    RETURN JSON ONLY. No markdown formatting outside of the JSON string.
+    RETURN JSON ONLY. No markdown.
 `;
