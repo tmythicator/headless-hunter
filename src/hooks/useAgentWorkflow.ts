@@ -73,11 +73,14 @@ export const useAgentWorkflow = (): AgentWorkflow => {
       addLog(UI_INIT);
 
       try {
-        const stream = await graph.stream({
-          user_input_prompt: query,
-          resume_path: resumePath,
-          config_output_path: resultPath,
-        });
+        const stream = await graph.stream(
+          {
+            user_input_prompt: query,
+            resume_path: resumePath,
+            config_output_path: resultPath,
+          },
+          { recursionLimit: 50 }
+        );
 
         for await (const chunk of stream) {
           const step = chunk as Partial<Record<AgentNode, Partial<AgentStateType>>>;

@@ -102,8 +102,8 @@ export async function scoutNode(state: typeof AgentState.State) {
   searchResults.filter((r) => isDirectCompanyLink(r)).forEach((r) => targets.add(r.url));
 
   return {
-    job_targets: Array.from(targets),
-    total_jobs: targets.size,
+    job_targets: Array.from(targets).slice(0, 20), // Place cap (to resolve possible recursion limit problems)
+    total_jobs: Math.min(targets.size, 20),
     processed_jobs: 0,
     search_results: searchResultsString,
     search_count: searchResults.length,

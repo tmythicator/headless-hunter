@@ -9,7 +9,11 @@ Stop hunting. Start matching.
 
 ** Demo
 
-[[./assets/demo.gif]]
+#+BEGIN_EXPORT html
+<video src="assets/headless-hunter-demo.mp4" width="100%" controls autoplay loop muted></video>
+#+END_EXPORT
+
+[[./assets/headless-hunter-demo.mp4]]
 
 ** Why?
 
