@@ -9,11 +9,7 @@ Stop hunting. Start matching.
 
 ## Demo
 
-<div align="center">
-  <video src="assets/headless-hunter-demo.mp4" width="100%" controls autoplay loop muted>
-    Your browser does not support the video tag.
-  </video>
-</div>
+https://github.com/user-attachments/assets/59ae443a-76a5-42eb-92dc-3794791c35ff
 
 ## Why?
 
@@ -43,12 +39,12 @@ Stop hunting. Start matching.
 
 ## Configuration (.env)
 
-| Var | Description |
-|-----|-------------|
-| `LLM_PROVIDER` | Default provider (`local` or `google`). |
+| Var                   | Description                                         |
+| --------------------- | --------------------------------------------------- |
+| `LLM_PROVIDER`        | Default provider (`local` or `google`).             |
 | `LLM_PROVIDER_{ROLE}` | Override specific node (e.g. `LLM_PROVIDER_SCOUT`). |
-| `GOOGLE_API_KEY` | Required for Google provider. |
-| `TAVILY_API_KEY` | Required for Production Search. |
+| `GOOGLE_API_KEY`      | Required for Google provider.                       |
+| `TAVILY_API_KEY`      | Required for Production Search.                     |
 
 ## Dev & Test
 
@@ -56,4 +52,5 @@ Stop hunting. Start matching.
 - **Test**: `bun test` (Switches to Free Mode: DDG + Local Scraper).
 
 ## License
+
 MIT
