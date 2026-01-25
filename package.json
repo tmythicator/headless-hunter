@@ -23,7 +23,7 @@
     "nix"
   ],
   "author": "Alexandr Timchenko",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "@langchain/core": "^0.3.80",
     "@langchain/google-genai": "^0.1.12",

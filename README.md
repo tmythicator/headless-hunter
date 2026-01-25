@@ -51,6 +51,13 @@ https://github.com/user-attachments/assets/59ae443a-76a5-42eb-92dc-3794791c35ff
 - **Lint/Format**: `bun run lint` / `bun run format`
 - **Test**: `bun test` (Switches to Free Mode: DDG + Local Scraper).
 
-## License
+## License & Copyright
 
-MIT
+**Copyright (c) 2025 Alexandr Timchenko**
+
+This project is open-source under the **GNU AGPLv3** license.
+
+- **For Open Source / Personal Use**: You are free to use, modify, and distribute this software, **as long as your modifications are also open-source**.
+- **For Commercial / Proprietary Use**: If you want to use this code in a closed-source product (SaaS, proprietary backend, etc.) without sharing your changes, you must obtain a **Commercial License**.
+
+> **Contact for Commercial Licensing**: Please open a [GitHub Issue](https://github.com/tmythicator/headless-hunter/issues) with the label 'Commercial Inquiry'.
