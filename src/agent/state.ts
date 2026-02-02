@@ -1,7 +1,7 @@
-import { BaseMessage } from '@langchain/core/messages';
-import { Annotation } from '@langchain/langgraph';
 import { ProfilerSummary, ScoutSummary } from '@/types';
 import { getNextHuntFilePath } from '@/utils';
+import { BaseMessage } from '@langchain/core/messages';
+import { Annotation } from '@langchain/langgraph';
 
 export const AgentState = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -82,6 +82,11 @@ export const AgentState = Annotation.Root({
   search_count: Annotation<number>({
     reducer: (_x, y) => y,
     default: () => 0,
+  }),
+
+  config_skip_scraping: Annotation<boolean>({
+    reducer: (_x, y) => y,
+    default: () => false,
   }),
 });
 

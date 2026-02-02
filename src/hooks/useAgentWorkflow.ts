@@ -1,22 +1,22 @@
-import { useState, useCallback } from 'react';
 import { graph } from '@/agent/graph';
 import { AgentStateType } from '@/agent/state';
-import { WorkflowPhase, AgentNode } from '@/types';
-import { ensureString } from '@/tools';
-import { getNextHuntFilePath, getLogFilePath } from '@/utils';
-import { runWithLogPath } from '@/utils/logger';
 import {
-  UI_TARGET_LOCKED,
-  UI_USING_RESUME,
-  UI_NO_RESUME,
-  UI_RESULT_PATH,
-  UI_TRACE_PATH,
-  UI_INIT,
-  UI_PROFILER_TARGET,
-  UI_STEP_FINISHED,
-  UI_MISSION_COMPLETE,
   UI_ERROR,
+  UI_INIT,
+  UI_MISSION_COMPLETE,
+  UI_NO_RESUME,
+  UI_PROFILER_TARGET,
+  UI_RESULT_PATH,
+  UI_STEP_FINISHED,
+  UI_TARGET_LOCKED,
+  UI_TRACE_PATH,
+  UI_USING_RESUME,
 } from '@/config/constants';
+import { ensureString } from '@/tools';
+import { AgentNode, WorkflowPhase } from '@/types';
+import { getLogFilePath, getNextHuntFilePath } from '@/utils';
+import { runWithLogPath } from '@/utils/logger';
+import { useCallback, useState } from 'react';
 
 export interface LogItem {
   id: number;
@@ -30,7 +30,11 @@ export interface AgentWorkflow {
   totalJobs: number;
   processedJobs: number;
   searchCount: number;
-  startWorkflow: (query: string, resumePath: string | null) => Promise<void>;
+  startWorkflow: (
+    query: string,
+    resumePath: string | null,
+    skipScraping?: boolean
+  ) => Promise<void>;
   setPhase: (phase: WorkflowPhase) => void;
 }
 
@@ -46,7 +50,7 @@ export const useAgentWorkflow = (): AgentWorkflow => {
     setLogs((prev) => [...prev, { id: Date.now() + Math.random(), message: msg }]);
   }, []);
 
-  const startWorkflow = async (query: string, resumePath: string | null) => {
+  const startWorkflow = async (query: string, resumePath: string | null, skipScraping = false) => {
     // Clear the terminal to avoid ghosting from previous runs
     process.stdout.write('\x1Bc');
 
@@ -68,6 +72,9 @@ export const useAgentWorkflow = (): AgentWorkflow => {
       } else {
         addLog(UI_NO_RESUME);
       }
+      if (skipScraping) {
+        addLog('⚡  Mode: Quick Search (Scrapers Disabled)');
+      }
       addLog(UI_RESULT_PATH(resultPath));
       addLog(UI_TRACE_PATH(logPath));
       addLog(UI_INIT);
@@ -78,6 +85,7 @@ export const useAgentWorkflow = (): AgentWorkflow => {
             user_input_prompt: query,
             resume_path: resumePath,
             config_output_path: resultPath,
+            config_skip_scraping: skipScraping,
           },
           { recursionLimit: 50 }
         );

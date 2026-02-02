@@ -1,6 +1,6 @@
+import { APP_QUESTION } from '@/config/constants';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
-import { APP_QUESTION } from '@/config/constants';
 
 interface InputSectionProps {
   query: string;
@@ -11,10 +11,11 @@ interface InputSectionProps {
 
 const InputSection: React.FC<InputSectionProps> = ({ query, setQuery, onSubmit, defaultQuery }) => {
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" marginTop={1}>
       <Text italic color="cyan">
         {APP_QUESTION}
       </Text>
+
       <Box marginTop={1}>
         <Text bold color="magenta">
           ›{' '}

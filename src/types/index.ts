@@ -36,6 +36,7 @@ export enum ProviderType {
 
 export enum WorkflowPhase {
   RESUME_SELECTION = 'resume_selection',
+  MODE_SELECTION = 'mode_selection',
   INPUT = 'input',
   WORKING = 'working',
   DONE = 'done',

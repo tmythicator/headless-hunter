@@ -1,17 +1,19 @@
-import { useState } from 'react';
-import { Box } from 'ink';
 import { APP_DEFAULT_QUERY } from '@/config/constants';
-import ReportSection from './ReportSection';
-import Header from './Header';
-import InputSection from './InputSection';
-import StatusSection from './StatusSection';
-import { ResumeSelection } from './ResumeSelection';
 import { useAgentWorkflow } from '@/hooks/useAgentWorkflow';
 import { WorkflowPhase } from '@/types';
+import { Box } from 'ink';
+import { useState } from 'react';
+import Header from './Header';
+import InputSection from './InputSection';
+import { ModeSelection } from './ModeSelection';
+import ReportSection from './ReportSection';
+import { ResumeSelection } from './ResumeSelection';
+import StatusSection from './StatusSection';
 
 export const HeadlessHunter = () => {
   const [query, setQuery] = useState('');
   const [resumePath, setResumePath] = useState<string | null>(null);
+  const [skipScraping, setSkipScraping] = useState(false);
   const {
     phase,
     logs,
@@ -25,12 +27,17 @@ export const HeadlessHunter = () => {
 
   const handleResumeSelect = (path: string | null) => {
     setResumePath(path);
+    setPhase(WorkflowPhase.MODE_SELECTION);
+  };
+
+  const handleModeSelect = (skip: boolean) => {
+    setSkipScraping(skip);
     setPhase(WorkflowPhase.INPUT);
   };
 
   const handleSubmit = () => {
     const finalQuery = query.trim() || APP_DEFAULT_QUERY;
-    void startWorkflow(finalQuery, resumePath);
+    void startWorkflow(finalQuery, resumePath, skipScraping);
   };
 
   return (
@@ -47,6 +54,8 @@ export const HeadlessHunter = () => {
       {phase === WorkflowPhase.RESUME_SELECTION && (
         <ResumeSelection onSelect={handleResumeSelect} />
       )}
+
+      {phase === WorkflowPhase.MODE_SELECTION && <ModeSelection onSelect={handleModeSelect} />}
 
       {phase === WorkflowPhase.INPUT && (
         <InputSection
