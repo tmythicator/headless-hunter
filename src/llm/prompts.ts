@@ -87,3 +87,15 @@ export const createScoutPrompt = (
     }
     RETURN JSON ONLY. No markdown.
 `;
+
+export const createRecoveryPrompt = (json: string, error: unknown): string => `
+  Repair this malformed JSON structure and return ONLY the valid JSON:
+
+  MALFORMED CONTENT:
+  ${json}
+
+  ERROR CONTEXT:
+  ${String(error)}
+
+  RETURN ONLY THE VALID JSON.
+`;

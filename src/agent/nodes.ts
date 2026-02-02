@@ -1,27 +1,25 @@
-import { HumanMessage } from '@langchain/core/messages';
-import { getModel } from '@/llm/model_factory';
-import { AgentState } from './state';
-import { searchJobsInDach, harvestLinksFromPage, scrapeContentLocal } from '@/tools';
-import { ProfilerSummary, TavilySearchResult, ScoutSummary, AgentNode } from '@/types';
-import { loadResume } from '@/tools/resume_loader';
-import { logTrace } from '@/utils/logger';
-import { createProfilerPrompt, createScoutPrompt } from '@/llm/prompts';
-import { getParsedModelOutput } from '@/utils';
 import {
-  LOG_STAGE_SCOUT_SEARCH,
-  LOG_STAGE_SCOUT_ERROR,
-  LOG_MSG_MD_FAILED,
   LOG_MSG_WRITE_FAILED,
+  LOG_STAGE_SCOUT_ERROR,
+  LOG_STAGE_SCOUT_SEARCH,
 } from '@/config/constants';
+import { getModel } from '@/llm/model_factory';
+import { createProfilerPrompt, createScoutPrompt } from '@/llm/prompts';
+import { harvestLinksFromPage, scrapeContentLocal, searchJobsInDach } from '@/tools';
+import { loadResume } from '@/tools/resume_loader';
+import { AgentNode, ProfilerSummary, ScoutSummary, TavilySearchResult } from '@/types';
+import { getParsedModelOutput } from '@/utils';
+import { logTrace } from '@/utils/logger';
+import { HumanMessage } from '@langchain/core/messages';
+import { AgentStateType } from './state';
 
-export async function profilerNode(state: typeof AgentState.State) {
+export async function profilerNode(state: AgentStateType) {
   const model = getModel(AgentNode.PROFILER);
-
   const resumeContent = await loadResume(state.resume_path);
-
   const profilerPrompt = createProfilerPrompt(state.user_input_prompt, resumeContent);
-  const profilerResponse = await model.invoke([new HumanMessage(profilerPrompt)]);
-  const prefs = await getParsedModelOutput<ProfilerSummary>(profilerResponse, AgentNode.PROFILER, {
+
+  const response = await model.invoke([new HumanMessage(profilerPrompt)]);
+  const prefs = await getParsedModelOutput<ProfilerSummary>(response, AgentNode.PROFILER, {
     role: state.user_input_prompt,
     keywords: [],
     location: '',
@@ -36,38 +34,28 @@ export async function profilerNode(state: typeof AgentState.State) {
   };
 }
 
+const HARVESTER_DOMAINS = ['glassdoor', 'linkedin.com/jobs/search', 'stepstone', 'indeed'];
+
 function isHarvesterLink(r: TavilySearchResult): boolean {
-  if (!r.url) return false;
-  const url = r.url.toLowerCase();
-  const title = r.title ? r.title.toLowerCase() : '';
+  const url = r.url?.toLowerCase() || '';
+  const title = r.title?.toLowerCase() || '';
 
-  // Explicit Harvester Domains
-  if (
-    url.includes('glassdoor') ||
-    url.includes('linkedin.com/jobs/search') ||
-    url.includes('stepstone') ||
-    url.includes('indeed')
-  ) {
-    return true;
-  }
+  const isKnownDomain = HARVESTER_DOMAINS.some((domain) => url.includes(domain));
+  const isGenericJobsPage =
+    title.includes('jobs') && !url.includes('/view/') && !url.includes('/job/');
 
-  // Heuristic: "Jobs" in title but not a specific job view
-  if (title.includes('jobs') && !url.includes('/view/') && !url.includes('/job/')) {
-    return true;
-  }
-
-  return false;
+  return isKnownDomain || isGenericJobsPage;
 }
 
 function isDirectCompanyLink(r: TavilySearchResult): boolean {
-  if (!r.url) return false;
-  return !r.url.includes('glassdoor') && !r.url.includes('search');
+  const url = r.url?.toLowerCase() || '';
+  return !url.includes('glassdoor') && !url.includes('search');
 }
 
-export async function scoutNode(state: typeof AgentState.State) {
-  const profilerSummary = state.profiler_summary;
+export async function scoutNode(state: AgentStateType) {
+  const { role, keywords, location, country } = state.profiler_summary;
 
-  const baseQuery = `${profilerSummary.role} ${profilerSummary.keywords.slice(0, 3).join(' ')} ${profilerSummary.location} ${profilerSummary.country ?? ''}`;
+  const baseQuery = `${role} ${keywords.slice(0, 3).join(' ')} ${location} ${country ?? ''}`;
   const siteConstraints = [
     'site:linkedin.com/jobs/view/',
     'site:glassdoor.com/job-listing/',
@@ -81,135 +69,104 @@ export async function scoutNode(state: typeof AgentState.State) {
 
   const query = `${baseQuery} (${siteConstraints}) "apply" -inurl:search -inurl:SRCH -inurl:jobs-at`;
 
-  // 1. Initial Search
   const searchResults = await searchJobsInDach(query, {
     max_results: 25,
     search_depth: 'advanced',
   });
-  const searchResultsString = JSON.stringify(searchResults, null, 2);
-  await logTrace(LOG_STAGE_SCOUT_SEARCH, query, searchResultsString);
+  await logTrace(LOG_STAGE_SCOUT_SEARCH, query, JSON.stringify(searchResults, null, 2));
 
-  // 2. Identify all targets
   const targets = new Set<string>();
-
-  // Harvester candidates (Top 2)
   searchResults
-    .filter((r) => isHarvesterLink(r))
+    .filter(isHarvesterLink)
     .slice(0, 2)
     .forEach((r) => targets.add(r.url));
+  searchResults.filter(isDirectCompanyLink).forEach((r) => targets.add(r.url));
 
-  // Direct candidates
-  searchResults.filter((r) => isDirectCompanyLink(r)).forEach((r) => targets.add(r.url));
+  const finalTargets = Array.from(targets).slice(0, 20);
 
   return {
-    job_targets: Array.from(targets).slice(0, 20), // Place cap (to resolve possible recursion limit problems)
-    total_jobs: Math.min(targets.size, 20),
+    job_targets: finalTargets,
+    total_jobs: finalTargets.length,
     processed_jobs: 0,
-    search_results: searchResultsString,
+    search_results: JSON.stringify(searchResults, null, 2),
     search_count: searchResults.length,
     messages: [new HumanMessage(`Scout found ${targets.size} primary targets.`)],
   };
 }
 
-export async function analystNode(state: typeof AgentState.State) {
-  // Case 1: More jobs to process
-  if (state.job_targets.length > 0) {
-    const url = state.job_targets[0];
-    const remainingTargets = state.job_targets.slice(1);
-    let newKnowledge = '';
-    const newScrapes: string[] = [];
+export async function analystNode(state: AgentStateType) {
+  if (state.job_targets.length === 0) return {};
 
-    // Check if it's a harvester link (heuristic)
-    const isHarvester =
-      url.includes('glassdoor') ||
-      url.includes('linkedin.com/jobs/search') ||
-      url.includes('stepstone') ||
-      url.includes('indeed');
+  const [url, ...remainingTargets] = state.job_targets;
+  let newKnowledge = '';
+  const newScrapes: string[] = [];
 
-    if (isHarvester) {
-      const harvestedJobs = await harvestLinksFromPage(url);
-      if (harvestedJobs.length > 0) {
-        // Scrape 2 harvested links to save time
-        const bestJobs = harvestedJobs.slice(0, 2);
-        for (const job of bestJobs) {
-          const content = await scrapeContentLocal(job.url);
-          if (content.length > 100) {
-            newKnowledge += `\n\n--- HARVESTED JOB SOURCE: ${job.url} (${job.title}) ---\n${content}\n`;
-            newScrapes.push(job.url);
-          }
-        }
-      }
-    } else {
-      // Direct scrape
-      const content = await scrapeContentLocal(url);
+  const isHarvester = HARVESTER_DOMAINS.some((domain) => url.includes(domain));
+
+  if (isHarvester) {
+    const harvestedJobs = await harvestLinksFromPage(url);
+    const bestJobs = harvestedJobs.slice(0, 2);
+    for (const job of bestJobs) {
+      const content = await scrapeContentLocal(job.url);
       if (content.length > 100) {
-        newKnowledge += `\n\n--- SOURCE: ${url} ---\n${content}`;
-        newScrapes.push(url);
+        newKnowledge += `\n\n--- HARVESTED SOURCE: ${job.url} (${job.title}) ---\n${content}\n`;
+        newScrapes.push(job.url);
       }
     }
-
-    return {
-      job_targets: remainingTargets,
-      processed_jobs: state.processed_jobs + 1,
-      scraped_knowledge: newKnowledge,
-      successful_scrapes: newScrapes,
-      messages: [new HumanMessage(`Processed ${url}`)],
-    };
+  } else {
+    const content = await scrapeContentLocal(url);
+    if (content.length > 100) {
+      newKnowledge += `\n\n--- SOURCE: ${url} ---\n${content}`;
+      newScrapes.push(url);
+    }
   }
-  return {};
+
+  return {
+    job_targets: remainingTargets,
+    processed_jobs: state.processed_jobs + 1,
+    scraped_knowledge: newKnowledge,
+    successful_scrapes: newScrapes,
+    messages: [new HumanMessage(`Processed ${url}`)],
+  };
 }
 
-export async function reporterNode(state: typeof AgentState.State) {
+export async function reporterNode(state: AgentStateType) {
   const model = getModel(AgentNode.SCOUT);
-  const profilerSummary = state.profiler_summary;
-  const resume = state.user_input_resume;
-
-  const scoutPrompt = createScoutPrompt(
-    profilerSummary,
-    resume,
+  const prompt = createScoutPrompt(
+    state.profiler_summary,
+    state.user_input_resume,
     state.search_results,
     state.scraped_knowledge,
     'See previous logs for full library',
     state.successful_scrapes.join('\n')
   );
 
-  const response = await model.invoke([new HumanMessage(scoutPrompt)]);
+  const response = await model.invoke([new HumanMessage(prompt)]);
   const scoutSummary = await getParsedModelOutput<ScoutSummary>(response, AgentNode.SCOUT, {
     market_summary: 'Error generating report.',
     jobs: [],
   });
 
-  let markdownReport = '';
-  try {
-    markdownReport = `# Headless Hunter Report\n\n`;
-    markdownReport += `**Market Summary:** ${scoutSummary.market_summary}\n\n`;
-    markdownReport += `## Top Picks\n\n`;
+  let report = `# Headless Hunter Report\n\n**Market Summary:** ${scoutSummary.market_summary}\n\n## Top Picks\n\n`;
 
-    scoutSummary.jobs.forEach((job) => {
-      const badgeStr = job.badges.join(' ');
-      markdownReport += `### ${job.title} @ ${job.company} (${job.location})\n`;
-      markdownReport += `* **Verdict:** ${job.verdict} ${badgeStr}\n`;
-      markdownReport += `* **Verified Stack:** ${job.tech_stack.join(', ')}\n`;
-      markdownReport += `* **Cynical Take:** ${job.cynical_take}\n`;
-      markdownReport += `* **Why it fits:** ${job.why_it_fits}\n`;
-      markdownReport += `* **Link:** [Apply Here](${job.url})\n\n`;
-      markdownReport += `---\n\n`;
-    });
-  } catch (err) {
-    await logTrace(LOG_STAGE_SCOUT_ERROR, LOG_MSG_MD_FAILED, String(err));
-    markdownReport = 'Check logs. Model failed to generate report.';
-  }
+  scoutSummary.jobs.forEach((job) => {
+    report += `### ${job.title} @ ${job.company} (${job.location})\n`;
+    report += `* **Verdict:** ${job.verdict} ${job.badges.join(' ')}\n`;
+    report += `* **Verified Stack:** ${job.tech_stack.join(', ')}\n`;
+    report += `* **Cynical Take:** ${job.cynical_take}\n`;
+    report += `* **Why it fits:** ${job.why_it_fits}\n`;
+    report += `* **Link:** [Apply Here](${job.url})\n\n---\n\n`;
+  });
 
-  // Write result
   try {
     const outFile = state.config_output_path || 'result.md';
-    await Bun.write(outFile, markdownReport);
-  } catch (e) {
-    await logTrace(LOG_STAGE_SCOUT_ERROR, LOG_MSG_WRITE_FAILED, String(e));
+    await Bun.write(outFile, report);
+  } catch (err) {
+    await logTrace(LOG_STAGE_SCOUT_ERROR, LOG_MSG_WRITE_FAILED, String(err));
   }
 
   return {
-    messages: [new HumanMessage(markdownReport)],
+    messages: [new HumanMessage(report)],
     scout_summary: scoutSummary,
     is_finished: true,
   };
