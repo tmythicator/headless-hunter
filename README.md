@@ -23,27 +23,35 @@ https://github.com/user-attachments/assets/59ae443a-76a5-42eb-92dc-3794791c35ff
 1. **Env**: `nix develop`
 2. **Config**: Copy `.env-example` to `.env` and add API keys.
 3. **Input**: Drop your `resume.md` (or `.pdf` / `.txt`) in the root.
-4. **Run**: `bun run src/index.tsx`
-
-## Workflow & Architecture
+4. **Run**: `bun start`
 
 ## Workflow & Architecture
 
 ```mermaid
-graph LR
-    User[Resume + Prompt] --> A[Profiler]
-    A --> B[Scout]
-    B --> C[Researcher]
-    C --> D[Hunter]
-    D --> Report[Final Report]
+flowchart LR
+    User([Resume + Prompt]) --> Profiler
+    Profiler --> Scout
+    Scout --> Deep{Deep Dive?}
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#ffa,stroke:#333,stroke-width:2px
-    style C fill:#aff,stroke:#333,stroke-width:2px
-    style D fill:#faa,stroke:#333,stroke-width:2px
+    Deep -- Yes --> Researcher
+    Deep -- No --> Hunter
+
+    Researcher --> More{More Targets?}
+    More -- Yes --> Researcher
+    More -- No --> Hunter
+
+    Hunter --> Report([Final Report])
+
+    %% Soft Professional Palette
+    style Profiler fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    style Scout fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    style Researcher fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Hunter fill:#ffccbc,stroke:#bf360c,stroke-width:2px,color:#000
+    style Deep fill:#ffffff,stroke:#333,stroke-width:2px,color:#000
+    style More fill:#ffffff,stroke:#333,stroke-width:2px,color:#000
 ```
 
-### The Squad
+### AI Agents
 
 - **Profiler (Strategist)**: Analyzes your resume and prompt to define the perfect "Hunter Profile" (keywords, seniority, vibe).
 - **Scout (Lead Sourcer)**: Sweeps global job indices (Tavily) to find high-potential search targets.
@@ -67,7 +75,7 @@ graph LR
 
 ## License & Copyright
 
-**Copyright (c) 2025 Alexandr Timchenko**
+**Copyright (c) 2025-2026 Alexandr Timchenko**
 
 This project is open-source under the **GNU AGPLv3** license.
 
