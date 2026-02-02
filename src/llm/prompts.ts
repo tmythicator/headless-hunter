@@ -23,7 +23,7 @@ export const createProfilerPrompt = (userPrompt: string, resumeContent: string):
   RETURN JSON ONLY. No markdown formatting.
 `;
 
-export const createScoutPrompt = (
+export const createHunterPrompt = (
   profilerSummary: ProfilerSummary,
   resume: string,
   searchResultsString: string,
@@ -71,7 +71,7 @@ export const createScoutPrompt = (
 
     REPORT FORMAT:
     Return strictly JSON matching this interface:
-    interface ScoutSummary {
+    interface HuntSummary {
       market_summary: string; // Keep this CONCISE (max 2-3 sentences).
       jobs: {
         title: string;

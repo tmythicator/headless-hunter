@@ -1,18 +1,20 @@
-import { describe, test, expect, mock } from 'bun:test';
+import * as modelFactory from '@/llm/model_factory';
 import { getParsedModelOutput } from '@/utils';
 import { AIMessageChunk } from '@langchain/core/messages';
-
-void mock.module('@/llm/model_factory', () => {
-  return {
-    getModel: () => ({
-      invoke: () => Promise.reject(new Error('UnitTest: Recovery Model Failure')),
-    }),
-  };
-});
+import { ChatOllama } from '@langchain/ollama';
+import { afterAll, describe, expect, spyOn, test } from 'bun:test';
 
 describe('Utils: getParsedModelOutput', () => {
   type TestResult = { key: string } | { id: number }[] | { error: boolean };
   const fallback: TestResult = { error: true };
+
+  const modelSpy = spyOn(modelFactory, 'getModel').mockReturnValue({
+    invoke: () => Promise.reject(new Error('UnitTest: Recovery Model Failure')),
+  } as unknown as ChatOllama);
+
+  afterAll(() => {
+    modelSpy.mockRestore();
+  });
 
   test('should extract pure JSON', async () => {
     const input = '{"key": "value"}';

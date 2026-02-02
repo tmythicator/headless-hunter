@@ -4,10 +4,10 @@ import {
   LOG_STAGE_SCOUT_SEARCH,
 } from '@/config/constants';
 import { getModel } from '@/llm/model_factory';
-import { createProfilerPrompt, createScoutPrompt } from '@/llm/prompts';
+import { createHunterPrompt, createProfilerPrompt } from '@/llm/prompts';
 import { harvestLinksFromPage, scrapeContentLocal, searchJobsInDach } from '@/tools';
 import { loadResume } from '@/tools/resume_loader';
-import { AgentNode, ProfilerSummary, ScoutSummary, TavilySearchResult } from '@/types';
+import { AgentNode, HuntSummary, ProfilerSummary, TavilySearchResult } from '@/types';
 import { getParsedModelOutput } from '@/utils';
 import { logTrace } from '@/utils/logger';
 import { HumanMessage } from '@langchain/core/messages';
@@ -94,7 +94,7 @@ export async function scoutNode(state: AgentStateType) {
   };
 }
 
-export async function analystNode(state: AgentStateType) {
+export async function researcherNode(state: AgentStateType) {
   if (state.job_targets.length === 0) return {};
 
   const [url, ...remainingTargets] = state.job_targets;
@@ -130,32 +130,43 @@ export async function analystNode(state: AgentStateType) {
   };
 }
 
-export async function reporterNode(state: AgentStateType) {
-  const model = getModel(AgentNode.SCOUT);
-  const prompt = createScoutPrompt(
+export async function hunterNode(state: AgentStateType) {
+  const model = getModel(AgentNode.HUNTER);
+  const prompt = createHunterPrompt(
     state.profiler_summary,
     state.user_input_resume,
     state.search_results,
     state.scraped_knowledge,
-    'See previous logs for full library',
+    state.search_results,
     state.successful_scrapes.join('\n')
   );
 
   const response = await model.invoke([new HumanMessage(prompt)]);
-  const scoutSummary = await getParsedModelOutput<ScoutSummary>(response, AgentNode.SCOUT, {
+  const huntSummaryResult = await getParsedModelOutput<HuntSummary>(response, AgentNode.HUNTER, {
     market_summary: 'Error generating report.',
     jobs: [],
   });
 
-  let report = `# Headless Hunter Report\n\n**Market Summary:** ${scoutSummary.market_summary}\n\n## Top Picks\n\n`;
+  const huntSummary = {
+    market_summary: huntSummaryResult.market_summary ?? 'Error generating report.',
+    jobs: huntSummaryResult.jobs ?? [],
+  };
 
-  scoutSummary.jobs.forEach((job) => {
-    report += `### ${job.title} @ ${job.company} (${job.location})\n`;
-    report += `* **Verdict:** ${job.verdict} ${job.badges.join(' ')}\n`;
-    report += `* **Verified Stack:** ${job.tech_stack.join(', ')}\n`;
-    report += `* **Cynical Take:** ${job.cynical_take}\n`;
-    report += `* **Why it fits:** ${job.why_it_fits}\n`;
-    report += `* **Link:** [Apply Here](${job.url})\n\n---\n\n`;
+  let report = `# Headless Hunter Report\n\n**Market Summary:** ${huntSummary.market_summary}\n\n## Top Picks\n\n`;
+
+  huntSummary.jobs.forEach((job) => {
+    const title = job.title ?? 'Position';
+    const company = job.company ?? 'Company';
+    const location = job.location ?? 'Location';
+    const badges = Array.isArray(job.badges) ? job.badges : [];
+    const techStack = Array.isArray(job.tech_stack) ? job.tech_stack : [];
+
+    report += `### ${title} @ ${company} (${location})\n`;
+    report += `* **Verdict:** ${job.verdict ?? 'Analysis pending'} ${badges.join(' ')}\n`;
+    report += `* **Verified Stack:** ${techStack.join(', ')}\n`;
+    report += `* **Cynical Take:** ${job.cynical_take ?? 'No data provided.'}\n`;
+    report += `* **Why it fits:** ${job.why_it_fits ?? 'Check listing for details.'}\n`;
+    report += `* **Link:** [Apply Here](${job.url ?? '#'})\n\n---\n\n`;
   });
 
   try {
@@ -167,7 +178,7 @@ export async function reporterNode(state: AgentStateType) {
 
   return {
     messages: [new HumanMessage(report)],
-    scout_summary: scoutSummary,
+    hunt_summary: huntSummary,
     is_finished: true,
   };
 }

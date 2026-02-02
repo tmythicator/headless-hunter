@@ -27,15 +27,29 @@ https://github.com/user-attachments/assets/59ae443a-76a5-42eb-92dc-3794791c35ff
 
 ## Workflow & Architecture
 
-```text
-[Resume + User Prompt] -> (Profiler) -> (Scout) -> (Analyst) -> (Reporter) -> [Report]
+## Workflow & Architecture
+
+```mermaid
+graph LR
+    User[Resume + Prompt] --> A[Profiler]
+    A --> B[Scout]
+    B --> C[Researcher]
+    C --> D[Hunter]
+    D --> Report[Final Report]
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#ffa,stroke:#333,stroke-width:2px
+    style C fill:#aff,stroke:#333,stroke-width:2px
+    style D fill:#faa,stroke:#333,stroke-width:2px
 ```
 
-- **Profiler**: Extracts search criteria (JSON) from resume.
-- **Scout**: Finds targets via Tavily (Prod) or DuckDuckGo (Test).
-- **Analyst**: Deeply scrapes job pages (Puppeteer).
-- **Reporter**: Synthesizes final cynical report.
-- **Recovery**: Repairs malformed LLM outputs, if needed.
+### The Squad
+
+- **Profiler (Strategist)**: Analyzes your resume and prompt to define the perfect "Hunter Profile" (keywords, seniority, vibe).
+- **Scout (Lead Sourcer)**: Sweeps global job indices (Tavily) to find high-potential search targets.
+- **Researcher (Deep Investigator)**: Visits every target URL, bypassing basic scrapers to extract the _real_ page content.
+- **Hunter (Synthesis Agent)**: The cynical closer. It reviews the raw data, cross-references your resume, and writes the final report, filtering out fluff.
+- **Recovery**: Automatic self-healing layer for LLM JSON errors.
 
 ## Configuration (.env)
 

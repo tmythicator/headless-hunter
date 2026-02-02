@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'bun:test';
 import { harvestLinksFromPage, scrapeContentLocal } from '@/tools';
+import { describe, expect, test } from 'bun:test';
 import linkedinTargets from '../fixtures/linkedin_targets.json';
 
 const TEST_CASES = linkedinTargets;
@@ -8,7 +8,10 @@ describe('LinkedIn Harvester (Live)', () => {
   const TIMEOUT = 120000;
 
   for (const testCase of TEST_CASES) {
-    test(
+    const isLive = !!process.env.RUN_LIVE_TESTS;
+    const runTest = isLive ? test : test.skip;
+
+    runTest(
       `should harvest links from ${testCase.name}`,
       async () => {
         console.log(`Attempting to harvest: ${testCase.url}`);

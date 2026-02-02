@@ -72,6 +72,7 @@ export const HeadlessHunter = () => {
         totalJobs={totalJobs}
         processedJobs={processedJobs}
         searchCount={searchCount}
+        isQuickSearch={skipScraping}
       />
 
       {phase === WorkflowPhase.DONE && <ReportSection finalResult={finalResult} />}

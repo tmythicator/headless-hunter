@@ -24,8 +24,8 @@ export interface ModelConfig {
 export enum AgentNode {
   PROFILER = 'profiler',
   SCOUT = 'scout',
-  ANALYST = 'analyst',
-  REPORTER = 'reporter',
+  RESEARCHER = 'researcher',
+  HUNTER = 'hunter',
   RECOVERY = 'recovery',
 }
 
@@ -60,7 +60,7 @@ export interface JobMatch {
   url: string;
 }
 
-export interface ScoutSummary {
+export interface HuntSummary {
   market_summary: string;
   jobs: JobMatch[];
 }

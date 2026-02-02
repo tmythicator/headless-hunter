@@ -109,8 +109,8 @@ export const useAgentWorkflow = (): AgentWorkflow => {
             }
           }
 
-          if (step[AgentNode.ANALYST]) {
-            const data = step[AgentNode.ANALYST];
+          if (step[AgentNode.RESEARCHER]) {
+            const data = step[AgentNode.RESEARCHER];
             if (data?.processed_jobs !== undefined) {
               setProcessedJobs(data.processed_jobs);
               // Provide visual feedback for small iterations
@@ -124,12 +124,12 @@ export const useAgentWorkflow = (): AgentWorkflow => {
 
             // If we just finished the last job, signal the final phase immediately
             if (data?.job_targets?.length === 0) {
-              addLog('🖋️  Scanning complete. Synthesizing final report with LLM...');
+              addLog('🖋️  Scanning complete. Initializing the Hunter for final synthesis...');
             }
           }
 
-          if (step[AgentNode.REPORTER]) {
-            const data = step[AgentNode.REPORTER];
+          if (step[AgentNode.HUNTER]) {
+            const data = step[AgentNode.HUNTER];
 
             if (data?.messages && data.messages.length > 0) {
               const lastMessage = data.messages[data.messages.length - 1];
@@ -137,7 +137,7 @@ export const useAgentWorkflow = (): AgentWorkflow => {
 
               if (typeof content === 'string' && content.length > 100) {
                 setFinalResult(ensureString(content));
-                addLog(UI_STEP_FINISHED(AgentNode.REPORTER));
+                addLog(UI_STEP_FINISHED(AgentNode.HUNTER));
               }
             }
           }

@@ -1,4 +1,4 @@
-import { ProfilerSummary, ScoutSummary } from '@/types';
+import { HuntSummary, ProfilerSummary } from '@/types';
 import { getNextHuntFilePath } from '@/utils';
 import { BaseMessage } from '@langchain/core/messages';
 import { Annotation } from '@langchain/langgraph';
@@ -34,8 +34,8 @@ export const AgentState = Annotation.Root({
     }),
   }),
 
-  scout_summary: Annotation<ScoutSummary>({
-    reducer: (_x, y) => y,
+  hunt_summary: Annotation<HuntSummary>({
+    reducer: (x, y) => ({ ...x, ...y }),
     default: () => ({ market_summary: '', jobs: [] }),
   }),
 

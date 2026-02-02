@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'bun:test';
 import { harvestLinksFromPage, scrapeContentLocal } from '@/tools';
+import { describe, expect, test } from 'bun:test';
 import glassdoorTargets from '../fixtures/glassdoor_targets.json';
 
 const TEST_CASES = glassdoorTargets;
@@ -8,7 +8,10 @@ describe('Glassdoor Harvester (Live)', () => {
   const TIMEOUT = 120000;
 
   for (const testCase of TEST_CASES) {
-    test(
+    const isLive = !!process.env.RUN_LIVE_TESTS;
+    const runTest = isLive ? test : test.skip;
+
+    runTest(
       `should harvest links from ${testCase.name}`,
       async () => {
         const links = await harvestLinksFromPage(testCase.url);

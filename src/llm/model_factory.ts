@@ -56,5 +56,7 @@ export function getModelInfo() {
   return {
     profiler: getModelConfig(AgentNode.PROFILER),
     scout: getModelConfig(AgentNode.SCOUT),
+    researcher: getModelConfig(AgentNode.RESEARCHER),
+    hunter: getModelConfig(AgentNode.HUNTER),
   };
 }

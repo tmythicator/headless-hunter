@@ -1,8 +1,8 @@
-import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
-import { WorkflowPhase } from '@/types';
 import { APP_AGENT_HUNTING, APP_PROCESSING_STREAM } from '@/config/constants';
 import { LogItem } from '@/hooks/useAgentWorkflow';
+import { WorkflowPhase } from '@/types';
+import { Box, Text } from 'ink';
+import Spinner from 'ink-spinner';
 
 interface StatusSectionProps {
   phase: WorkflowPhase;
@@ -10,6 +10,7 @@ interface StatusSectionProps {
   totalJobs?: number;
   processedJobs?: number;
   searchCount?: number;
+  isQuickSearch?: boolean;
 }
 
 const StatusSection: React.FC<StatusSectionProps> = ({
@@ -18,10 +19,12 @@ const StatusSection: React.FC<StatusSectionProps> = ({
   totalJobs = 0,
   processedJobs = 0,
   searchCount = 0,
+  isQuickSearch = false,
 }) => {
-  const showProgress = totalJobs > 0 || searchCount > 0;
+  const showProgress = searchCount > 0 || totalJobs > 0;
   const isFinalizing =
-    processedJobs === totalJobs && totalJobs > 0 && phase === WorkflowPhase.WORKING;
+    (isQuickSearch && searchCount > 0 && phase === WorkflowPhase.WORKING) ||
+    (processedJobs === totalJobs && totalJobs > 0 && phase === WorkflowPhase.WORKING);
 
   // Last 10 logs for visibility
   const displayLogs = logs.slice(-10);
@@ -36,7 +39,8 @@ const StatusSection: React.FC<StatusSectionProps> = ({
             {showProgress && !isFinalizing && (
               <Text>
                 {' '}
-                [Search: {searchCount} | Scans: {processedJobs}/{totalJobs}]
+                [Search: {searchCount}
+                {!isQuickSearch ? ` | Scans: ${processedJobs}/${totalJobs}` : ''}]
               </Text>
             )}
           </Text>
