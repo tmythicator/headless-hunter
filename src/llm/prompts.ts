@@ -52,7 +52,7 @@ export const createHunterPrompt = (
     ${verifiedScrapesList || 'NONE'}
 
     TASK:
-    Analyze the market. Pick up to 10 best fits. Be thorough, be honest, be cynical.
+    Analyze the market. Pick up to 7 best fits. Be thorough, be honest, be cynical.
 
     MANDATORY RULES:
     1. **STRICT GROUNDING**: ONLY report jobs that were explicitly found in the SCAN DATA or SCRAPED CONTENT.
@@ -68,6 +68,11 @@ export const createHunterPrompt = (
     - Add "🛡️ [Bot Protected 😔]" to badges.
     - Set verdict to 'Interesting Gamble' (since we can't verify details).
     - In 'cynical_take', express mild sadness that such a potentially good role is hidden behind a corporate firewall.
+    9. **TECH STACK VERIFICATION**:
+    - The \`tech_stack\` array MUST ONLY contain technologies EXPLICITLY FOUND in the "VERIFIED SCAN DATA" or "SCRAPED CONTENT".
+    - DO NOT INFER technologies (e.g., do not list "React" just because "Next.js" is mentioned, unless "React" is also explicitly written).
+    - DO NOT HALLUCINATE keywords not present in the text.
+    - IF a user keyword is NOT in the text, DO NOT include it in the \`tech_stack\` list for that job.
 
     REPORT FORMAT:
     Return strictly JSON matching this interface:

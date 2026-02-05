@@ -31,7 +31,7 @@ function getModelConfig(node: AgentNode): ModelConfig {
 
 export function getModel(node: AgentNode) {
   const { provider, modelName } = getModelConfig(node);
-  const maxOutputTokens = node === AgentNode.SCOUT ? 8192 : 4096;
+  const maxOutputTokens = node === AgentNode.SCOUT || node === AgentNode.HUNTER ? 8192 : 4096;
 
   if (provider === ProviderType.GOOGLE) {
     if (!process.env.GOOGLE_API_KEY) {
