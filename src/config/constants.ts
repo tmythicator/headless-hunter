@@ -24,11 +24,15 @@ export const UI = {
 export const LOG = {
   STAGE_SCOUT_SEARCH: 'SCOUT_SEARCH',
   STAGE_SCOUT_ERROR: 'SCOUT_ERROR',
-  MSG_MD_FAILED: 'Markdown Generation Failed',
-  MSG_WRITE_FAILED: 'Failed to write result.md',
+  MSG_MD_FAILED: '❌ Markdown Generation Failed',
+  MSG_WRITE_FAILED: '❌ Failed to write result.md',
   MSG_RAW_CONTENT: 'Raw Content',
-  MSG_JSON_ERROR: 'JSON Parse Error',
-  MSG_MODEL_FAILED: 'Model Invocation Failed',
+  MSG_JSON_ERROR: '❌ JSON Parse Error',
+  MSG_VALIDATION_SUCCESS: '✅ Zod Validation Passed',
+  MSG_RECOVERY_SUCCESS: '✅ Recovery Validation Passed',
+  MSG_VALIDATION_FAILED: '❌ Validation Failed',
+  MSG_RECOVERY_FAILED: '❌ Recovery Validation Failed',
+  MSG_MODEL_FAILED: '❌ Model Invocation Failed',
 };
 
 export const AGENT = {
@@ -51,7 +55,6 @@ export const REPORT = {
   ANALYSIS_PENDING: 'Analysis pending',
   NO_DATA: 'No data provided.',
   CHECK_LISTING: 'Check listing for details.',
-  APPLY_LINK: '[Apply Here]',
 };
 
 export const STATUS = {

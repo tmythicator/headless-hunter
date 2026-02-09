@@ -1,11 +1,7 @@
-export interface ProfilerSummary {
-  role: string;
-  keywords: string[];
-  location: string;
-  country?: string;
-  min_salary: number | null;
-  vibe: string;
-}
+import { HuntSummarySchema, JobMatchSchema, ProfilerSummarySchema } from '@/llm/schemas';
+import { z } from 'zod';
+
+export type ProfilerSummary = z.infer<typeof ProfilerSummarySchema>;
 
 export interface TavilySearchResult {
   url: string;
@@ -48,19 +44,6 @@ export enum Verdict {
   INTERESTING_GAMBLE = 'Interesting Gamble',
 }
 
-export interface JobMatch {
-  title: string;
-  company: string;
-  location: string;
-  verdict: Verdict;
-  badges: string[];
-  tech_stack: string[];
-  cynical_take: string;
-  why_it_fits: string;
-  url: string;
-}
+export type JobMatch = z.infer<typeof JobMatchSchema>;
 
-export interface HuntSummary {
-  market_summary: string;
-  jobs: JobMatch[];
-}
+export type HuntSummary = z.infer<typeof HuntSummarySchema>;

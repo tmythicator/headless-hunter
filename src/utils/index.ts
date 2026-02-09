@@ -6,6 +6,7 @@ import { AgentNode } from '@/types';
 import { AIMessageChunk, HumanMessage } from '@langchain/core/messages';
 import fs from 'fs';
 import path from 'path';
+import { ZodType } from 'zod';
 import { logTrace } from './logger';
 
 async function fixMalformedJson<T>(json: string, error: unknown): Promise<T | null> {
@@ -51,6 +52,7 @@ function cleanJsonString(json: string): string {
 export async function getParsedModelOutput<T>(
   response: AIMessageChunk,
   nodeName: string,
+  schema: ZodType<T>,
   fallbackValue: T
 ): Promise<T> {
   const content = ensureString(response.content);
@@ -59,14 +61,35 @@ export async function getParsedModelOutput<T>(
   const cleanJson = cleanJsonString(extractJsonCandidate(content));
 
   try {
-    return JSON.parse(cleanJson) as T;
+    const parsed: unknown = JSON.parse(cleanJson);
+    const validated = schema.parse(parsed);
+    await logTrace(`${nodeName}_VALIDATION`, 'schema_check', LOG.MSG_VALIDATION_SUCCESS);
+    return validated;
   } catch (error) {
     await logTrace(
       `${nodeName}_ERROR`,
       LOG.MSG_JSON_ERROR,
-      `Parse failed: ${cleanJson.slice(0, 100)}...`
+      `${LOG.MSG_VALIDATION_FAILED}: ${cleanJson.slice(0, 100)}... Error: ${String(error)}`
     );
-    return (await fixMalformedJson<T>(cleanJson, error)) ?? fallbackValue;
+    const recovered = await fixMalformedJson<T>(cleanJson, error);
+    if (recovered) {
+      try {
+        const validatedRecovered = schema.parse(recovered);
+        await logTrace(
+          `${nodeName}_RECOVERY`,
+          LOG.MSG_RECOVERY_SUCCESS,
+          JSON.stringify(validatedRecovered)
+        );
+        return validatedRecovered;
+      } catch (validationError) {
+        await logTrace(
+          `${nodeName}_RECOVERY_FAIL`,
+          LOG.MSG_JSON_ERROR,
+          `${LOG.MSG_RECOVERY_FAILED}: ${String(validationError)}`
+        );
+      }
+    }
+    return fallbackValue;
   }
 }
 

@@ -1,6 +1,7 @@
 import { AGENT, HUNTER, LOG, REPORT } from '@/config/constants';
 import { getModel } from '@/llm/model_factory';
 import { createHunterPrompt, createProfilerPrompt } from '@/llm/prompts';
+import { HuntSummarySchema, ProfilerSummarySchema } from '@/llm/schemas';
 import { harvestLinksFromPage, scrapeContentLocal, searchJobsInDach } from '@/tools';
 import { loadResume } from '@/tools/resume_loader';
 import { AgentNode, HuntSummary, ProfilerSummary, TavilySearchResult } from '@/types';
@@ -15,13 +16,18 @@ export async function profilerNode(state: AgentStateType) {
   const profilerPrompt = createProfilerPrompt(state.user_input_prompt, resumeContent);
 
   const response = await model.invoke([new HumanMessage(profilerPrompt)]);
-  const prefs = await getParsedModelOutput<ProfilerSummary>(response, AgentNode.PROFILER, {
-    role: state.user_input_prompt,
-    keywords: [],
-    location: '',
-    min_salary: null,
-    vibe: '',
-  });
+  const prefs = await getParsedModelOutput<ProfilerSummary>(
+    response,
+    AgentNode.PROFILER,
+    ProfilerSummarySchema,
+    {
+      role: state.user_input_prompt,
+      keywords: [],
+      location: '',
+      min_salary: null,
+      vibe: '',
+    }
+  );
 
   return {
     profiler_summary: prefs,
@@ -138,10 +144,15 @@ export async function hunterNode(state: AgentStateType) {
   );
 
   const response = await model.invoke([new HumanMessage(prompt)]);
-  const huntSummaryResult = await getParsedModelOutput<HuntSummary>(response, AgentNode.HUNTER, {
-    market_summary: REPORT.ERROR_SUMMARY,
-    jobs: [],
-  });
+  const huntSummaryResult = await getParsedModelOutput<HuntSummary>(
+    response,
+    AgentNode.HUNTER,
+    HuntSummarySchema,
+    {
+      market_summary: REPORT.ERROR_SUMMARY,
+      jobs: [],
+    }
+  );
 
   const huntSummary = {
     market_summary: huntSummaryResult.market_summary ?? REPORT.ERROR_SUMMARY,
@@ -163,7 +174,7 @@ export async function hunterNode(state: AgentStateType) {
     report += `* **Verified Stack:** ${techStack.join(', ')}\n`;
     report += `* **Cynical Take:** ${job.cynical_take ?? REPORT.NO_DATA}\n`;
     report += `* **Why it fits:** ${job.why_it_fits ?? REPORT.CHECK_LISTING}\n`;
-    report += `* **Link:** ${REPORT.APPLY_LINK}(${job.url ?? '#'})\n\n---\n\n`;
+    report += `* **Link:** (${job.url ?? '#'})\n\n---\n\n`;
   });
 
   try {
