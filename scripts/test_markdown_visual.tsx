@@ -13,7 +13,7 @@ This script validates the **rendering capabilities** of the agent.
 3. **Links**:
 - [Short Link](https://google.com)
 - [Apply Here (Long URL)](https://www.linkedin.com/jobs/view/very-long-url-that-would-normally-break-wrapping-and-become-unclickable-in-some-terminals-123456789)
-- **Link:** [Apply Here](https://www.linkedin.com/jobs/view/senior-software-engineer-%E2%80%93-go-golang-%24100-%E2%80%93-%24200-hr-remote-eu-at-call-for-referral-4291120813)
+- **Link:** (https://www.linkedin.com/jobs/view/senior-software-engineer-%E2%80%93-go-golang-%24100-%E2%80%93-%24200-hr-remote-eu-at-call-for-referral-4291120813)
 - **Badge Check:** ⚠️ [Tavily interpretation only]
 
 
