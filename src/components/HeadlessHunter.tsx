@@ -1,4 +1,4 @@
-import { APP_DEFAULT_QUERY } from '@/config/constants';
+import { APP } from '@/config/constants';
 import { useAgentWorkflow } from '@/hooks/useAgentWorkflow';
 import { WorkflowPhase } from '@/types';
 import { Box } from 'ink';
@@ -36,7 +36,7 @@ export const HeadlessHunter = () => {
   };
 
   const handleSubmit = () => {
-    const finalQuery = query.trim() || APP_DEFAULT_QUERY;
+    const finalQuery = query.trim() || APP.DEFAULT_QUERY;
     void startWorkflow(finalQuery, resumePath, skipScraping);
   };
 
@@ -62,7 +62,7 @@ export const HeadlessHunter = () => {
           query={query}
           setQuery={setQuery}
           onSubmit={handleSubmit}
-          defaultQuery={APP_DEFAULT_QUERY}
+          defaultQuery={APP.DEFAULT_QUERY}
         />
       )}
 

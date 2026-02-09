@@ -1,4 +1,4 @@
-import { APP_AGENT_HUNTING, APP_PROCESSING_STREAM } from '@/config/constants';
+import { APP, STATUS } from '@/config/constants';
 import { LogItem } from '@/hooks/useAgentWorkflow';
 import { WorkflowPhase } from '@/types';
 import { Box, Text } from 'ink';
@@ -35,12 +35,12 @@ const StatusSection: React.FC<StatusSectionProps> = ({
         <Box marginBottom={1}>
           <Text color="yellow">
             <Spinner type="dots" />{' '}
-            <Text bold>{isFinalizing ? ' FINALIZING REPORT...' : ` ${APP_AGENT_HUNTING}`}</Text>
+            <Text bold>{isFinalizing ? STATUS.FINALIZING : ` ${APP.AGENT_HUNTING}`}</Text>
             {showProgress && !isFinalizing && (
               <Text>
                 {' '}
-                [Search: {searchCount}
-                {!isQuickSearch ? ` | Scans: ${processedJobs}/${totalJobs}` : ''}]
+                [{STATUS.SEARCH_COUNT} {searchCount}
+                {!isQuickSearch ? ` | ${STATUS.SCANS} ${processedJobs}/${totalJobs}` : ''}]
               </Text>
             )}
           </Text>
@@ -57,7 +57,7 @@ const StatusSection: React.FC<StatusSectionProps> = ({
         >
           <Box marginBottom={1}>
             <Text bold underline color="gray">
-              {APP_PROCESSING_STREAM}
+              {APP.PROCESSING_STREAM}
             </Text>
           </Box>
           <Box flexDirection="column">

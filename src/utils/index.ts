@@ -1,4 +1,4 @@
-import { LOG_MSG_JSON_ERROR, LOG_MSG_RAW_CONTENT } from '@/config/constants';
+import { LOG } from '@/config/constants';
 import { getModel } from '@/llm/model_factory';
 import { createRecoveryPrompt } from '@/llm/prompts';
 import { ensureString } from '@/tools';
@@ -54,7 +54,7 @@ export async function getParsedModelOutput<T>(
   fallbackValue: T
 ): Promise<T> {
   const content = ensureString(response.content);
-  await logTrace(nodeName, LOG_MSG_RAW_CONTENT, content);
+  await logTrace(nodeName, LOG.MSG_RAW_CONTENT, content);
 
   const cleanJson = cleanJsonString(extractJsonCandidate(content));
 
@@ -63,7 +63,7 @@ export async function getParsedModelOutput<T>(
   } catch (error) {
     await logTrace(
       `${nodeName}_ERROR`,
-      LOG_MSG_JSON_ERROR,
+      LOG.MSG_JSON_ERROR,
       `Parse failed: ${cleanJson.slice(0, 100)}...`
     );
     return (await fixMalformedJson<T>(cleanJson, error)) ?? fallbackValue;

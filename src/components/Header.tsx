@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
 import { getModelInfo } from '@/llm/model_factory';
 import { AgentNode } from '@/types';
-import { APP_GREETING } from '@/config/constants';
+import { APP } from '@/config/constants';
 
 const Header = () => {
   const modelInfo = getModelInfo();
@@ -9,7 +9,7 @@ const Header = () => {
   return (
     <Box marginBottom={1} justifyContent="center" flexDirection="column" alignItems="center">
       <Text bold color="green">
-        {APP_GREETING}
+        {APP.GREETING}
       </Text>
       <Box marginTop={0}>
         <Text>

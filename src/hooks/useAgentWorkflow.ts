@@ -1,17 +1,6 @@
 import { graph } from '@/agent/graph';
 import { AgentStateType } from '@/agent/state';
-import {
-  UI_ERROR,
-  UI_INIT,
-  UI_MISSION_COMPLETE,
-  UI_NO_RESUME,
-  UI_PROFILER_TARGET,
-  UI_RESULT_PATH,
-  UI_STEP_FINISHED,
-  UI_TARGET_LOCKED,
-  UI_TRACE_PATH,
-  UI_USING_RESUME,
-} from '@/config/constants';
+import { AGENT, STATUS, UI } from '@/config/constants';
 import { ensureString } from '@/tools';
 import { AgentNode, WorkflowPhase } from '@/types';
 import { getLogFilePath, getNextHuntFilePath } from '@/utils';
@@ -66,18 +55,18 @@ export const useAgentWorkflow = (): AgentWorkflow => {
 
     // Wrap execution with log context
     await runWithLogPath(logPath, async () => {
-      addLog(UI_TARGET_LOCKED(query));
+      addLog(UI.TARGET_LOCKED(query));
       if (resumePath) {
-        addLog(UI_USING_RESUME(resumePath));
+        addLog(UI.USING_RESUME(resumePath));
       } else {
-        addLog(UI_NO_RESUME);
+        addLog(UI.NO_RESUME);
       }
       if (skipScraping) {
-        addLog('⚡  Mode: Quick Search (Scrapers Disabled)');
+        addLog(STATUS.QUICK_SEARCH);
       }
-      addLog(UI_RESULT_PATH(resultPath));
-      addLog(UI_TRACE_PATH(logPath));
-      addLog(UI_INIT);
+      addLog(UI.RESULT_PATH(resultPath));
+      addLog(UI.TRACE_PATH(logPath));
+      addLog(UI.INIT);
 
       try {
         const stream = await graph.stream(
@@ -95,17 +84,17 @@ export const useAgentWorkflow = (): AgentWorkflow => {
 
           if (step[AgentNode.PROFILER]) {
             const role = step[AgentNode.PROFILER]?.profiler_summary?.role;
-            addLog(UI_PROFILER_TARGET(role ?? 'Unknown'));
-            addLog(UI_STEP_FINISHED(AgentNode.PROFILER));
+            addLog(UI.PROFILER_TARGET(role ?? 'Unknown'));
+            addLog(UI.STEP_FINISHED(AgentNode.PROFILER));
           }
 
           if (step[AgentNode.SCOUT]) {
             const data = step[AgentNode.SCOUT];
-            addLog(UI_STEP_FINISHED(AgentNode.SCOUT));
+            addLog(UI.STEP_FINISHED(AgentNode.SCOUT));
             if (data?.total_jobs !== undefined) setTotalJobs(data.total_jobs);
             if (data?.search_count !== undefined) {
               setSearchCount(data.search_count);
-              addLog(`🔍  Global search returned ${data.search_count} potential links.`);
+              addLog(AGENT.SCOUT_GLOBAL_SEARCH(data.search_count));
             }
           }
 
@@ -116,15 +105,15 @@ export const useAgentWorkflow = (): AgentWorkflow => {
               // Provide visual feedback for small iterations
               if (data.messages && data.messages.length > 0) {
                 const msg = data.messages[data.messages.length - 1].content;
-                if (typeof msg === 'string' && msg.startsWith('Processed')) {
-                  addLog(`🛡️  ${msg}`);
+                if (typeof msg === 'string' && msg.startsWith(AGENT.RESEARCHER_PREFIX_PROCESSED)) {
+                  addLog(msg);
                 }
               }
             }
 
             // If we just finished the last job, signal the final phase immediately
             if (data?.job_targets?.length === 0) {
-              addLog('🖋️  Scanning complete. Initializing the Hunter for final synthesis...');
+              addLog(AGENT.HUNTER_SCAN_COMPLETE);
             }
           }
 
@@ -137,14 +126,14 @@ export const useAgentWorkflow = (): AgentWorkflow => {
 
               if (typeof content === 'string' && content.length > 100) {
                 setFinalResult(ensureString(content));
-                addLog(UI_STEP_FINISHED(AgentNode.HUNTER));
+                addLog(UI.STEP_FINISHED(AgentNode.HUNTER));
               }
             }
           }
         }
-        addLog(UI_MISSION_COMPLETE);
+        addLog(UI.MISSION_COMPLETE);
       } catch (error) {
-        addLog(UI_ERROR(error instanceof Error ? error.message : String(error)));
+        addLog(UI.ERROR(error instanceof Error ? error.message : String(error)));
       } finally {
         setPhase(WorkflowPhase.DONE);
       }

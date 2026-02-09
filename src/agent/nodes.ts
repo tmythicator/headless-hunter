@@ -1,8 +1,4 @@
-import {
-  LOG_MSG_WRITE_FAILED,
-  LOG_STAGE_SCOUT_ERROR,
-  LOG_STAGE_SCOUT_SEARCH,
-} from '@/config/constants';
+import { AGENT, HUNTER, LOG, REPORT } from '@/config/constants';
 import { getModel } from '@/llm/model_factory';
 import { createHunterPrompt, createProfilerPrompt } from '@/llm/prompts';
 import { harvestLinksFromPage, scrapeContentLocal, searchJobsInDach } from '@/tools';
@@ -30,7 +26,7 @@ export async function profilerNode(state: AgentStateType) {
   return {
     profiler_summary: prefs,
     user_input_resume: resumeContent,
-    messages: [new HumanMessage(`Strategy: Hunting for ${prefs.role} in ${prefs.location}`)],
+    messages: [new HumanMessage(AGENT.PROFILER_STRATEGY(prefs.role, prefs.location))],
   };
 }
 
@@ -73,7 +69,7 @@ export async function scoutNode(state: AgentStateType) {
     max_results: 25,
     search_depth: 'advanced',
   });
-  await logTrace(LOG_STAGE_SCOUT_SEARCH, query, JSON.stringify(searchResults, null, 2));
+  await logTrace(LOG.STAGE_SCOUT_SEARCH, query, JSON.stringify(searchResults, null, 2));
 
   const targets = new Set<string>();
   searchResults
@@ -90,7 +86,7 @@ export async function scoutNode(state: AgentStateType) {
     processed_jobs: 0,
     search_results: JSON.stringify(searchResults, null, 2),
     search_count: searchResults.length,
-    messages: [new HumanMessage(`Scout found ${targets.size} primary targets.`)],
+    messages: [new HumanMessage(AGENT.SCOUT_FOUND_TARGETS(targets.size))],
   };
 }
 
@@ -109,14 +105,14 @@ export async function researcherNode(state: AgentStateType) {
     for (const job of bestJobs) {
       const content = await scrapeContentLocal(job.url);
       if (content.length > 100) {
-        newKnowledge += `\n\n--- HARVESTED SOURCE: ${job.url} (${job.title}) ---\n${content}\n`;
+        newKnowledge += AGENT.RESEARCHER_SOURCE_HEADER(job.url, job.title) + content + '\n';
         newScrapes.push(job.url);
       }
     }
   } else {
     const content = await scrapeContentLocal(url);
     if (content.length > 100) {
-      newKnowledge += `\n\n--- SOURCE: ${url} ---\n${content}`;
+      newKnowledge += AGENT.RESEARCHER_SOURCE_HEADER(url) + content;
       newScrapes.push(url);
     }
   }
@@ -126,7 +122,7 @@ export async function researcherNode(state: AgentStateType) {
     processed_jobs: state.processed_jobs + 1,
     scraped_knowledge: newKnowledge,
     successful_scrapes: newScrapes,
-    messages: [new HumanMessage(`Processed ${url}`)],
+    messages: [new HumanMessage(AGENT.RESEARCHER_PROCESSED(url))],
   };
 }
 
@@ -143,37 +139,38 @@ export async function hunterNode(state: AgentStateType) {
 
   const response = await model.invoke([new HumanMessage(prompt)]);
   const huntSummaryResult = await getParsedModelOutput<HuntSummary>(response, AgentNode.HUNTER, {
-    market_summary: 'Error generating report.',
+    market_summary: REPORT.ERROR_SUMMARY,
     jobs: [],
   });
 
   const huntSummary = {
-    market_summary: huntSummaryResult.market_summary ?? 'Error generating report.',
+    market_summary: huntSummaryResult.market_summary ?? REPORT.ERROR_SUMMARY,
     jobs: huntSummaryResult.jobs ?? [],
   };
 
-  let report = `# Headless Hunter Report\n\n**Market Summary:** ${huntSummary.market_summary}\n\n## Top Picks\n\n`;
+  let report =
+    REPORT.HEADER + REPORT.MARKET_SUMMARY + ` ${huntSummary.market_summary}\n\n` + REPORT.TOP_PICKS;
 
   huntSummary.jobs.forEach((job) => {
-    const title = job.title ?? 'Position';
-    const company = job.company ?? 'Company';
-    const location = job.location ?? 'Location';
+    const title = job.title ?? HUNTER.DEFAULT_POSITION;
+    const company = job.company ?? HUNTER.DEFAULT_COMPANY;
+    const location = job.location ?? HUNTER.DEFAULT_LOCATION;
     const badges = Array.isArray(job.badges) ? job.badges : [];
     const techStack = Array.isArray(job.tech_stack) ? job.tech_stack : [];
 
     report += `### ${title} @ ${company} (${location})\n`;
-    report += `* **Verdict:** ${job.verdict ?? 'Analysis pending'} ${badges.join(' ')}\n`;
+    report += `* **Verdict:** ${job.verdict ?? REPORT.ANALYSIS_PENDING} ${badges.join(' ')}\n`;
     report += `* **Verified Stack:** ${techStack.join(', ')}\n`;
-    report += `* **Cynical Take:** ${job.cynical_take ?? 'No data provided.'}\n`;
-    report += `* **Why it fits:** ${job.why_it_fits ?? 'Check listing for details.'}\n`;
-    report += `* **Link:** [Apply Here](${job.url ?? '#'})\n\n---\n\n`;
+    report += `* **Cynical Take:** ${job.cynical_take ?? REPORT.NO_DATA}\n`;
+    report += `* **Why it fits:** ${job.why_it_fits ?? REPORT.CHECK_LISTING}\n`;
+    report += `* **Link:** ${REPORT.APPLY_LINK}(${job.url ?? '#'})\n\n---\n\n`;
   });
 
   try {
     const outFile = state.config_output_path || 'result.md';
     await Bun.write(outFile, report);
   } catch (err) {
-    await logTrace(LOG_STAGE_SCOUT_ERROR, LOG_MSG_WRITE_FAILED, String(err));
+    await logTrace(LOG.STAGE_SCOUT_ERROR, LOG.MSG_WRITE_FAILED, String(err));
   }
 
   return {

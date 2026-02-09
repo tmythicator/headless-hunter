@@ -85,8 +85,8 @@ export const createHunterPrompt = (
         verdict: 'Strong Match' | 'Weak Match' | 'Interesting Gamble';
         badges: string[];
         tech_stack: string[];
-        cynical_take: string; // Max 1 sentence
-        why_it_fits: string; // Max 1 sentence
+        cynical_take: string; // Max 2 sentences
+        why_it_fits: string; // Max 2 sentences
         url: string;
       }[];
     }

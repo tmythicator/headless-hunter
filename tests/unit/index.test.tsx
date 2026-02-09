@@ -4,14 +4,7 @@ import { HeadlessHunter } from '@/components/HeadlessHunter';
 import { WorkflowPhase } from '@/types';
 import stripAnsi from 'strip-ansi';
 import { AgentWorkflow } from '@/hooks/useAgentWorkflow';
-import {
-  APP_AGENT_HUNTING,
-  APP_GREETING,
-  APP_PROCESSING_STREAM,
-  APP_QUESTION,
-  APP_REPORT_EXIT,
-  APP_REPORT_TITLE,
-} from '@/config/constants';
+import { APP } from '@/config/constants';
 
 const mockStartWorkflow = mock(() => Promise.resolve());
 const mockHook = mock(
@@ -43,13 +36,13 @@ describe('HeadlessHunter', () => {
     const { lastFrame } = render(<HeadlessHunter />);
     const output = stripAnsi(lastFrame() ?? '');
 
-    expect(output).toContain(APP_GREETING);
-    expect(output).toContain(APP_QUESTION);
-    expect(output).not.toContain(APP_AGENT_HUNTING);
-    expect(output).not.toContain(APP_PROCESSING_STREAM);
+    expect(output).toContain(APP.GREETING);
+    expect(output).toContain(APP.QUESTION);
+    expect(output).not.toContain(APP.AGENT_HUNTING);
+    expect(output).not.toContain(APP.PROCESSING_STREAM);
     expect(output).not.toContain(mockFinalResult);
-    expect(output).not.toContain(APP_REPORT_TITLE);
-    expect(output).not.toContain(APP_REPORT_EXIT);
+    expect(output).not.toContain(APP.REPORT_TITLE);
+    expect(output).not.toContain(APP.REPORT_EXIT);
   });
 
   test('renders working state correctly', () => {
@@ -70,13 +63,13 @@ describe('HeadlessHunter', () => {
 
     const { lastFrame } = render(<HeadlessHunter />);
     const output = stripAnsi(lastFrame() ?? '');
-    expect(output).toContain(APP_AGENT_HUNTING);
-    expect(output).toContain(APP_PROCESSING_STREAM);
+    expect(output).toContain(APP.AGENT_HUNTING);
+    expect(output).toContain(APP.PROCESSING_STREAM);
     expect(output).toContain(logs[0].message);
     expect(output).toContain(logs[1].message);
     expect(output).not.toContain(mockFinalResult);
-    expect(output).not.toContain(APP_REPORT_TITLE);
-    expect(output).not.toContain(APP_REPORT_EXIT);
+    expect(output).not.toContain(APP.REPORT_TITLE);
+    expect(output).not.toContain(APP.REPORT_EXIT);
   });
 
   test('renders ReportSection when in DONE phase', () => {
@@ -95,7 +88,7 @@ describe('HeadlessHunter', () => {
     const output = stripAnsi(lastFrame() ?? '');
 
     expect(output).toContain('Great Success');
-    expect(output).toContain(APP_REPORT_TITLE);
-    expect(output).toContain(APP_REPORT_EXIT);
+    expect(output).toContain(APP.REPORT_TITLE);
+    expect(output).toContain(APP.REPORT_EXIT);
   });
 });
