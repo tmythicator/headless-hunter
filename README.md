@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/59ae443a-76a5-42eb-92dc-3794791c35ff
 2.  **Deep Intelligence**: Scrapes past the "Show More" buttons to analyze the full job description.
 3.  **Privacy First**: Run the entire reasoning engine locally with Ollama. No data leaks.
 4.  **Cynical Analysis**: The agent is trained to be skeptical, filtering out roles that don't match your technical depth.
+5.  **Self-Healing Types**: Built with **Zod** schema validation and an auto-recovery agent. If the LLM generates invalid JSON, the Recovery Agent steps in to fix it on the fly.
 
 ## Quick Start
 
@@ -42,11 +43,17 @@ flowchart LR
 
     Hunter --> Report([Final Report])
 
+    Profiler -. Error .-> Recovery([Recovery Agent])
+    Recovery -. Fixed .-> Profiler
+    Hunter -. Error .-> Recovery
+    Recovery -. Fixed .-> Hunter
+
     %% Soft Professional Palette
     style Profiler fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
     style Scout fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
     style Researcher fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
     style Hunter fill:#ffccbc,stroke:#bf360c,stroke-width:2px,color:#000
+    style Recovery fill:#ffebee,stroke:#c62828,stroke-width:2px,stroke-dasharray: 5 5,color:#000
     style Deep fill:#ffffff,stroke:#333,stroke-width:2px,color:#000
     style More fill:#ffffff,stroke:#333,stroke-width:2px,color:#000
 ```
